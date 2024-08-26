@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="GoLinterSettings">
+    <option name="enabledLinters">
+      <list>
+        <option value="staticcheck" />
+        <option value="govet" />
+        <option value="cyclop" />
+        <option value="gocritic" />
+        <option value="errcheck" />
+        <option value="thelper" />
+        <option value="ineffassign" />
+        <option value="unparam" />
+        <option value="testifylint" />
+        <option value="gosec" />
+        <option value="unused" />
+        <option value="promlinter" />
+        <option value="revive" />
+        <option value="contextcheck" />
+        <option value="whitespace" />
+        <option value="paralleltest" />
+        <option value="goimports" />
+        <option value="gosimple" />
+      </list>
+    </option>
+    <option name="goLinterExe" value="/usr/local/bin/golangci-lint" />
+    <option name="linterSelected" value="true" />
+  </component>
+</project>
