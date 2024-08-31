@@ -1,0 +1,34 @@
+---
+name: Pre-commit auto-update
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: 0 8 1 * * # Every first day of month at 08:00 UTC
+jobs:
+  auto-update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.10
+          cache: pip
+
+      - name: Install pre-commit
+        run: pip install pre-commit
+
+      - name: Run pre-commit autoupdate
+        run: pre-commit autoupdate
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.UIP_GITHUB_API_TOKEN }}
+          branch: INFRA-0-auto-update-pre-commit-hooks
+          title: INFRA-0 Auto-update pre-commit hooks
+          commit-message: Auto-update pre-commit hooks
+          body: Update pre-commit tools to the latest version
+          labels: dependencies,sre-kubernetes

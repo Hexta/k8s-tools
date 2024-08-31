@@ -2,34 +2,14 @@ package nodeutil
 
 import (
 	"context"
-	"fmt"
-	"sort"
 	"time"
 
-	"github.com/rodaine/table"
 	log "github.com/sirupsen/logrus"
 	apicorev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
 )
-
-func PrintNodeUtilisation(nodes []NodeInfo) {
-	sort.Slice(nodes, func(i, j int) bool { return nodes[i].Utilisation.CPU < nodes[j].Utilisation.CPU })
-
-	tbl := table.New("Name", "CPU", "Memory", "Type", "Age").WithWriter(log.StandardLogger().Out)
-	for _, node := range nodes {
-		tbl.AddRow(
-			node.Name,
-			fmt.Sprintf("%.3f", node.Utilisation.CPU),
-			fmt.Sprintf("%.3f", node.Utilisation.Memory),
-			fmt.Sprintf("%v", node.InstanceType),
-			node.Age.Truncate(time.Hour),
-		)
-	}
-
-	tbl.Print()
-}
 
 func GetNodes(ctx context.Context, kubeconfigFile string, labelSelector string) []NodeInfo {
 	config, err := clientcmd.BuildConfigFromFlags("", kubeconfigFile)
@@ -71,18 +51,6 @@ func GetNodes(ctx context.Context, kubeconfigFile string, labelSelector string) 
 		})
 	}
 	return nodes
-}
-
-type NodeUtilisation struct {
-	CPU    float64
-	Memory float64
-}
-
-type NodeInfo struct {
-	Name         string
-	Age          time.Duration
-	InstanceType string
-	Utilisation  NodeUtilisation
 }
 
 func listPodsPerNode(ctx context.Context, clientset *kubernetes.Clientset) (map[string][]*apicorev1.Pod, error) {
