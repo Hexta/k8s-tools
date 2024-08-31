@@ -7,7 +7,7 @@ A toolset for inspecting Kubernetes clusters.
 ### Installation
 
 ```shell
-go install github.com/Hexta/k8s-tools@latest
+go install github.com/Hexta/k8s-tools/cmd/k8s-tools@latest
 ```
 
 ## Usage
