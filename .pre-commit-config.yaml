@@ -1,0 +1,41 @@
+# See https://pre-commit.com for more information
+# See https://pre-commit.com/hooks.html for more hooks
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: check-added-large-files
+      - id: check-json
+      - id: check-symlinks
+      - id: check-yaml
+      - id: detect-private-key
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+
+  - repo: https://github.com/dnephin/pre-commit-golang
+    rev: v0.5.1
+    hooks:
+      - id: go-build
+        stages:
+          - pre-commit
+      - id: go-mod-tidy
+        stages:
+          - pre-commit
+
+  - repo: https://github.com/golangci/golangci-lint
+    rev: v1.60.3
+    hooks:
+      - id: golangci-lint
+        entry: golangci-lint run --fix ./...
+        types: [go]
+        language: golang
+        pass_filenames: false
+        stages:
+          - pre-commit
+
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.18.4
+    hooks:
+      - id: gitleaks
+        stages:
+          - pre-commit

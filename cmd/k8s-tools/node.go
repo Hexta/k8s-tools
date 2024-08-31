@@ -21,7 +21,7 @@ var nodeUtilisationCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		ctx := context.Background()
 		nodes := nodeutil.GetNodes(ctx, kubeconfig, labelSelector)
-		nodeutil.PrintNodeUtilisation(nodes)
+		nodeutil.FormatNodeInfo(nodes)
 	},
 }
 
