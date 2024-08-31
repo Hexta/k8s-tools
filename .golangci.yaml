@@ -15,9 +15,6 @@ linters:
     - whitespace
 
 linters-settings:
-  cyclop:
-    max-complexity: 15
-
   gocritic:
     enabled-checks:
       - appendCombine

@@ -1,4 +1,4 @@
-package nodeutilisation
+package nodeutil
 
 import (
 	"context"
@@ -14,7 +14,24 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 )
 
-func PrintNodeUtilisation(ctx context.Context, kubeconfigFile string, nodepool string) {
+func PrintNodeUtilisation(nodes []NodeInfo) {
+	sort.Slice(nodes, func(i, j int) bool { return nodes[i].Utilisation.CPU < nodes[j].Utilisation.CPU })
+
+	tbl := table.New("Name", "CPU", "Memory", "Type", "Age").WithWriter(log.StandardLogger().Out)
+	for _, node := range nodes {
+		tbl.AddRow(
+			node.Name,
+			fmt.Sprintf("%.3f", node.Utilisation.CPU),
+			fmt.Sprintf("%.3f", node.Utilisation.Memory),
+			fmt.Sprintf("%v", node.InstanceType),
+			node.Age.Truncate(time.Hour),
+		)
+	}
+
+	tbl.Print()
+}
+
+func GetNodes(ctx context.Context, kubeconfigFile string, labelSelector string) []NodeInfo {
 	config, err := clientcmd.BuildConfigFromFlags("", kubeconfigFile)
 	if err != nil {
 		log.Fatalf("Failed to create config: %v", err)
@@ -27,7 +44,7 @@ func PrintNodeUtilisation(ctx context.Context, kubeconfigFile string, nodepool s
 
 	list, err := clientset.CoreV1().Nodes().List(ctx, v1.ListOptions{
 		TypeMeta:      v1.TypeMeta{},
-		LabelSelector: nodepool,
+		LabelSelector: labelSelector,
 	})
 	if err != nil {
 		log.Fatalf("Failed to list nodes: %v", err)
@@ -45,7 +62,7 @@ func PrintNodeUtilisation(ctx context.Context, kubeconfigFile string, nodepool s
 	for idx := range list.Items {
 		node := &list.Items[idx]
 		instanceType := node.GetLabels()["node.kubernetes.io/instance-type"]
-		utilisation := calculateNodeResourceUtilisation(node, podsPerNode)
+		utilisation := calculateNodeUtilisation(node, podsPerNode)
 		nodes = append(nodes, NodeInfo{
 			Name:         node.Name,
 			Age:          time.Since(node.CreationTimestamp.Time),
@@ -53,21 +70,7 @@ func PrintNodeUtilisation(ctx context.Context, kubeconfigFile string, nodepool s
 			Utilisation:  utilisation,
 		})
 	}
-
-	sort.Slice(nodes, func(i, j int) bool { return nodes[i].Utilisation.CPU < nodes[j].Utilisation.CPU })
-
-	tbl := table.New("Name", "CPU", "Memory", "Type", "Age").WithWriter(log.StandardLogger().Out)
-	for _, node := range nodes {
-		tbl.AddRow(
-			node.Name,
-			fmt.Sprintf("%.3f", node.Utilisation.CPU),
-			fmt.Sprintf("%.3f", node.Utilisation.Memory),
-			fmt.Sprintf("%v", node.InstanceType),
-			node.Age.Truncate(time.Hour),
-		)
-	}
-
-	tbl.Print()
+	return nodes
 }
 
 type NodeUtilisation struct {
@@ -101,7 +104,7 @@ func listPodsPerNode(ctx context.Context, clientset *kubernetes.Clientset) (map[
 	return podsPerNode, nil
 }
 
-func calculateNodeResourceUtilisation(node *apicorev1.Node, podsPerNode map[string][]*apicorev1.Pod) NodeUtilisation {
+func calculateNodeUtilisation(node *apicorev1.Node, podsPerNode map[string][]*apicorev1.Pod) NodeUtilisation {
 	pods := podsPerNode[node.Name]
 
 	requestsCpu := float64(0)

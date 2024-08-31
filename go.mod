@@ -1,4 +1,4 @@
-module k8s-tools
+module github.com/Hexta/k8s-tools
 
 go 1.23.0
 
