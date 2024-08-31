@@ -23,7 +23,7 @@ jobs:
       GOOS: ${{ matrix.os }}
       GOARCH: ${{ matrix.arch }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Set up Go
         uses: actions/setup-go@v5
@@ -41,7 +41,7 @@ jobs:
         run: go test -v ./...
 
       - name: Archive dist artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: inputs.upload_artifacts
         with:
           name: dist-${{ matrix.os }}-${{ matrix.arch }}
