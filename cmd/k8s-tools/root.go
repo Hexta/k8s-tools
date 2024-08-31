@@ -3,8 +3,8 @@ package main
 import (
 	"os"
 
-	"k8s-tools/internal/pkg/logutil"
-	"k8s-tools/internal/pkg/version"
+	"github.com/Hexta/k8s-tools/internal/logutil"
+	"github.com/Hexta/k8s-tools/pkg/version"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"

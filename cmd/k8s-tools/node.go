@@ -4,7 +4,7 @@ import (
 	"context"
 	"path/filepath"
 
-	"k8s-tools/internal/pkg/nodeutilisation"
+	"github.com/Hexta/k8s-tools/internal/nodeutil"
 
 	"github.com/spf13/cobra"
 	"k8s.io/client-go/util/homedir"
@@ -20,13 +20,14 @@ var nodeUtilisationCmd = &cobra.Command{
 	Short: "Analyze the node utilisation",
 	Run: func(cmd *cobra.Command, args []string) {
 		ctx := context.Background()
-		nodeutilisation.PrintNodeUtilisation(ctx, kubeconfig, nodepool)
+		nodes := nodeutil.GetNodes(ctx, kubeconfig, labelSelector)
+		nodeutil.PrintNodeUtilisation(nodes)
 	},
 }
 
 var (
-	kubeconfig string
-	nodepool   string
+	kubeconfig    string
+	labelSelector string
 )
 
 func init() {
@@ -37,7 +38,7 @@ func init() {
 
 	rootCmd.PersistentFlags().StringVar(&kubeconfig, "kubeconfig", kubeconfigDefaultPath, "kubeconfig file")
 
-	nodeUtilisationCmd.Flags().StringVar(&nodepool, "nodepool", "", "node pool name")
+	nodeUtilisationCmd.Flags().StringVarP(&labelSelector, "label-selector", "l", "", "label selector")
 
 	nodeCmd.AddCommand(nodeUtilisationCmd)
 	rootCmd.AddCommand(nodeCmd)
