@@ -1,0 +1,19 @@
+name: Tag
+
+on:
+  push:
+    tags:
+      - v*
+
+jobs:
+  build:
+    uses: ./.github/workflows/build.yml
+    with:
+      upload_artifacts: true
+
+  release:
+    permissions:
+      contents: write
+    needs:
+      - build
+    uses: ./.github/workflows/release.yml
