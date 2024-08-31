@@ -1,0 +1,50 @@
+name: Build
+
+on:
+  workflow_call:
+    inputs:
+      upload_artifacts:
+        type: boolean
+        required: false
+        default: false
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        arch:
+          - arm64
+          - amd64
+        os:
+          - linux
+          - darwin
+    runs-on: ubuntu-latest
+    env:
+      GOOS: ${{ matrix.os }}
+      GOARCH: ${{ matrix.arch }}
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Create dist dir
+        run:
+          mkdir dist
+
+      - name: Build
+        run: make build
+
+      - name: Test
+        run: go test -v ./...
+
+      - name: Archive dist artifacts
+        uses: actions/upload-artifact@v3
+        if: inputs.upload_artifacts
+        with:
+          name: dist-${{ matrix.os }}-${{ matrix.arch }}
+          path: |
+            dist/*
+          retention-days: 3
