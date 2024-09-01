@@ -48,6 +48,7 @@ func ListNodes(ctx context.Context, kubeconfigFile string, labelSelector string)
 			CreationTimestamp: node.CreationTimestamp.Time,
 			InstanceType:      instanceType,
 			Utilisation:       utilisation,
+			Labels:            node.Labels,
 		})
 	}
 	return nodes

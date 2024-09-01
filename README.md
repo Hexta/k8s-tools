@@ -26,13 +26,17 @@ CGO_ENABLED=1 go install github.com/Hexta/k8s-tools/cmd/k8s-tools@latest
 
 #### Internal DB
 
+k8s-tools can save K8s cluster state in internal DB to ease analyzing.
+[DB Documentation](docs/db/index.md)
+
 1. Init DB.
     ```shell
     k8s-tools db init
     ```
 2. Query data.
+  * Top10 CPU underutilized nodes
     ```shell
-    k8s-tools db query "select name, cpu_utilisation, age(creation_ts)::varchar as age from k8s.nodes order by cpu_utilisation asc limit 10"
+    k8s-tools db query "select name, cpu_utilisation, labels['karpenter.sh/nodepool'] from k8s.nodes order by cpu_utilisation asc limit 10"
     ```
 
 ## Contributing
