@@ -5,7 +5,6 @@ import (
 	"path/filepath"
 
 	"github.com/Hexta/k8s-tools/internal/nodeutil"
-
 	"github.com/spf13/cobra"
 	"k8s.io/client-go/util/homedir"
 )
@@ -20,7 +19,7 @@ var nodeUtilisationCmd = &cobra.Command{
 	Short: "Analyze the node utilisation",
 	Run: func(cmd *cobra.Command, args []string) {
 		ctx := context.Background()
-		nodes := nodeutil.GetNodes(ctx, kubeconfig, labelSelector)
+		nodes := nodeutil.ListNodes(ctx, kubeconfig, labelSelector)
 		nodeutil.FormatNodeInfo(nodes)
 	},
 }
