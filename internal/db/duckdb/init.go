@@ -3,6 +3,7 @@ package duckdb
 import (
 	"context"
 	"database/sql"
+	"database/sql/driver"
 	"embed"
 	"fmt"
 	"os"
@@ -35,7 +36,12 @@ func InitDB(ctx context.Context, dataDir string, nodes []nodeutil.NodeInfo) erro
 		return fmt.Errorf("failed to create DB directory %s: %w", dbDir, err)
 	}
 
-	db, err := initConnection(dataDir)
+	connector, err := initConnector(dataDir)
+	if err != nil {
+		return fmt.Errorf("failed to initialize DB connector: %w", err)
+	}
+
+	db, con, err := initConnection(ctx, connector)
 	if err != nil {
 		return err
 	}
@@ -57,16 +63,20 @@ func InitDB(ctx context.Context, dataDir string, nodes []nodeutil.NodeInfo) erro
 		return err
 	}
 
-	return InsertNodes(ctx, db, nodes)
+	return InsertNodes(ctx, con, nodes)
 }
 
-func initConnection(dataDir string) (db *sql.DB, err error) {
+func initConnector(dataDir string) (*duckdb.Connector, error) {
 	dbDir := filepath.Join(dataDir, duckdbDir)
 	dbFile := filepath.Join(dbDir, "duckdb.db")
 
-	connector, err := duckdb.NewConnector(dbFile, nil)
+	return duckdb.NewConnector(dbFile, nil)
+}
+
+func initConnection(ctx context.Context, connector *duckdb.Connector) (db *sql.DB, connect driver.Conn, err error) {
+	connect, err = connector.Connect(ctx)
 	if err != nil {
-		err = fmt.Errorf("failed to create DB connector: %w", err)
+		err = fmt.Errorf("failed to connect to DB: %w", err)
 		return
 	}
 

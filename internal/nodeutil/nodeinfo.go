@@ -8,6 +8,7 @@ type NodeInfo struct {
 	CreationTimestamp time.Time
 	InstanceType      string
 	Utilisation       NodeUtilisation
+	Labels            map[string]string
 }
 
 type NodeUtilisation struct {
