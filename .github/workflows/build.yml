@@ -13,11 +13,9 @@ jobs:
     strategy:
       matrix:
         arch:
-          - arm64
           - amd64
         os:
           - linux
-          - darwin
     runs-on: ubuntu-latest
     env:
       GOOS: ${{ matrix.os }}
@@ -47,4 +45,4 @@ jobs:
           name: dist-${{ matrix.os }}-${{ matrix.arch }}
           path: |
             dist/*
-          retention-days: 3
+          retention-days: 7

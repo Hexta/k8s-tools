@@ -3,10 +3,11 @@ package nodeutil
 import "time"
 
 type NodeInfo struct {
-	Name         string
-	Age          time.Duration
-	InstanceType string
-	Utilisation  NodeUtilisation
+	Name              string
+	Age               time.Duration
+	CreationTimestamp time.Time
+	InstanceType      string
+	Utilisation       NodeUtilisation
 }
 
 type NodeUtilisation struct {
