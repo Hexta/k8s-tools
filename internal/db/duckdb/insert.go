@@ -1,14 +1,14 @@
 package duckdb
 
 import (
-	"context"
 	"database/sql/driver"
 
 	"github.com/Hexta/k8s-tools/internal/nodeutil"
+	"github.com/Hexta/k8s-tools/internal/podutil"
 	"github.com/marcboeker/go-duckdb"
 )
 
-func InsertNodes(_ context.Context, con driver.Conn, nodes []nodeutil.NodeInfo) error {
+func InsertNodes(con driver.Conn, nodes []nodeutil.NodeInfo) error {
 	appender, err := duckdb.NewAppenderFromConn(con, "k8s", "nodes")
 	if err != nil {
 		return err
@@ -22,6 +22,34 @@ func InsertNodes(_ context.Context, con driver.Conn, nodes []nodeutil.NodeInfo) 
 			node.Utilisation.CPU,
 			node.Utilisation.Memory,
 			mapStringStringToDuckdbMap(node.Labels),
+		)
+		if err != nil {
+			return err
+		}
+	}
+	err = appender.Flush()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func InsertPods(con driver.Conn, pods []podutil.PodInfo) error {
+	appender, err := duckdb.NewAppenderFromConn(con, "k8s", "pods")
+	if err != nil {
+		return err
+	}
+
+	for _, pod := range pods {
+		err := appender.AppendRow(
+			pod.Name,
+			pod.Namespace,
+			pod.NodeName,
+			pod.CreationTimestamp,
+			mapStringStringToDuckdbMap(pod.Labels),
+			pod.CPURequests,
+			pod.MemoryRequests,
 		)
 		if err != nil {
 			return err

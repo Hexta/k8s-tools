@@ -7,3 +7,14 @@ CREATE TABLE IF NOT EXISTS k8s.nodes (
     memory_utilisation FLOAT,
     labels MAP(STRING, STRING)
 );
+
+CREATE TABLE IF NOT EXISTS k8s.pods (
+    name STRING,
+    namespace STRING,
+    node STRING,
+    creation_ts TIMESTAMP,
+    labels MAP(STRING, STRING),
+    cpu_requests FLOAT,
+    memory_requests FLOAT,
+    PRIMARY KEY (namespace, name)
+);

@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 
 	"github.com/Hexta/k8s-tools/internal/nodeutil"
+	"github.com/Hexta/k8s-tools/internal/podutil"
 	"github.com/marcboeker/go-duckdb"
 	log "github.com/sirupsen/logrus"
 )
@@ -21,7 +22,7 @@ var (
 	initSQL embed.FS
 )
 
-func InitDB(ctx context.Context, dataDir string, nodes []nodeutil.NodeInfo) error {
+func InitDB(ctx context.Context, dataDir string, nodes []nodeutil.NodeInfo, pods []podutil.PodInfo) error {
 	dbDir := filepath.Join(dataDir, duckdbDir)
 
 	if _, err := os.Stat(dbDir); !os.IsNotExist(err) {
@@ -63,7 +64,17 @@ func InitDB(ctx context.Context, dataDir string, nodes []nodeutil.NodeInfo) erro
 		return err
 	}
 
-	return InsertNodes(ctx, con, nodes)
+	err = InsertNodes(con, nodes)
+	if err != nil {
+		return err
+	}
+
+	err = InsertPods(con, pods)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func initConnector(dataDir string) (*duckdb.Connector, error) {
