@@ -4,21 +4,25 @@ import (
 	"context"
 	"time"
 
-	"github.com/sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
+	apicorev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
 )
 
 func ListNodes(ctx context.Context, kubeconfigFile string, labelSelector string) []NodeInfo {
+	log.Debugf("Listing nodes - start")
+	defer log.Debugf("Listing nodes - done")
+
 	config, err := clientcmd.BuildConfigFromFlags("", kubeconfigFile)
 	if err != nil {
-		logrus.Fatalf("Failed to create config: %v", err)
+		log.Panicf("Failed to create config: %v", err)
 	}
 
 	clientset, err := kubernetes.NewForConfig(config)
 	if err != nil {
-		logrus.Fatalf("Failed to create client: %v", err)
+		log.Panicf("Failed to create client: %v", err)
 	}
 
 	list, err := clientset.CoreV1().Nodes().List(ctx, v1.ListOptions{
@@ -26,16 +30,14 @@ func ListNodes(ctx context.Context, kubeconfigFile string, labelSelector string)
 		LabelSelector: labelSelector,
 	})
 	if err != nil {
-		logrus.Fatalf("Failed to list nodes: %v", err)
+		log.Panicf("Failed to list nodes: %v", err)
 	}
 
 	nodes := make([]NodeInfo, 0, len(list.Items))
-
-	logrus.Debugf("Listing Pods per node - start")
 	podsPerNode, err := listPodsPerNode(ctx, clientset)
-	logrus.Debugf("Listing Pods per node - done. Size: %v", len(podsPerNode))
+
 	if err != nil {
-		logrus.Errorf("Failed to list pods per node: %v", err)
+		log.Errorf("Failed to list pods per node: %v", err)
 	}
 
 	for idx := range list.Items {
@@ -52,4 +54,26 @@ func ListNodes(ctx context.Context, kubeconfigFile string, labelSelector string)
 		})
 	}
 	return nodes
+}
+
+func listPodsPerNode(ctx context.Context, clientset *kubernetes.Clientset) (map[string][]*apicorev1.Pod, error) {
+	log.Debugf("Listing Pods per node - start")
+	defer log.Debugf("Listing Pods per node - done")
+
+	podsPerNode := make(map[string][]*apicorev1.Pod)
+
+	list, err := clientset.CoreV1().Pods("").List(ctx, v1.ListOptions{})
+	if err != nil {
+		log.Errorf("Failed to list pods: %v", err)
+		return podsPerNode, err
+	}
+
+	for i := range list.Items {
+		if _, ok := podsPerNode[list.Items[i].Spec.NodeName]; !ok {
+			podsPerNode[list.Items[i].Spec.NodeName] = make([]*apicorev1.Pod, 0, 8)
+		}
+		podsPerNode[list.Items[i].Spec.NodeName] = append(podsPerNode[list.Items[i].Spec.NodeName], &list.Items[i])
+	}
+
+	return podsPerNode, nil
 }
