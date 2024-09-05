@@ -2,6 +2,10 @@
 
 A toolset for inspecting Kubernetes clusters.
 
+Provides SQL interface for querying information about K8s:
+* Pods
+* Nodes
+
 ## Getting Started
 
 ### Installation
@@ -34,10 +38,15 @@ k8s-tools can save K8s cluster state in internal DB to ease analyzing.
     k8s-tools db init
     ```
 2. Query data.
-  * Top10 CPU underutilized nodes
+    * Top10 CPU underutilized nodes
+      ```shell
+      k8s-tools db query "select name, cpu_utilisation, labels['karpenter.sh/nodepool'] from k8s.nodes order by cpu_utilisation asc limit 10"
+      ```
+3. Run SQL TUI.
     ```shell
-    k8s-tools db query "select name, cpu_utilisation, labels['karpenter.sh/nodepool'] from k8s.nodes order by cpu_utilisation asc limit 10"
+    k8s-tools db tui
     ```
+   ![DB TUI](docs/db-tui-0.png)
 
 ## Contributing
 
