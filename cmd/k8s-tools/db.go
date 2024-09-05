@@ -48,8 +48,19 @@ var queryDBCmd = &cobra.Command{
 	},
 }
 
+var tuiDBCmd = &cobra.Command{
+	Use:   "tui",
+	Short: "TUI for DB",
+	Run: func(cmd *cobra.Command, args []string) {
+		ctx := context.Background()
+		db.RunTUI(ctx, cacheDir)
+
+	},
+}
+
 func init() {
 	dbCmd.AddCommand(initDBCmd)
+	dbCmd.AddCommand(tuiDBCmd)
 	dbCmd.AddCommand(queryDBCmd)
 
 	rootCmd.AddCommand(dbCmd)
