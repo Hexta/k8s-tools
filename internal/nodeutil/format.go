@@ -9,7 +9,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func FormatNodeInfo(nodes []NodeInfo) {
+func FormatNodeInfo(nodes NodeInfoList) {
 	sort.Slice(nodes, func(i, j int) bool { return nodes[i].Utilisation.CPU < nodes[j].Utilisation.CPU })
 
 	tbl := table.New("Name", "CPU", "Memory", "Type", "Age").WithWriter(logrus.StandardLogger().Out)

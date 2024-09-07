@@ -4,11 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/Hexta/k8s-tools/internal/containerutil"
 	"github.com/Hexta/k8s-tools/internal/db"
 	"github.com/Hexta/k8s-tools/internal/k8s"
-	"github.com/Hexta/k8s-tools/internal/nodeutil"
-	"github.com/Hexta/k8s-tools/internal/podutil"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
@@ -24,10 +21,11 @@ var initDBCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		ctx := context.Background()
 		clientSet := k8s.GetClientSet(kubeconfig)
-		nodes := nodeutil.ListNodes(ctx, kubeconfig, labelSelector)
-		pods := podutil.ListPods(ctx, clientSet, labelSelector)
-		containers := containerutil.ListContainers(ctx, clientSet, labelSelector)
-		err := db.InitDB(ctx, cacheDir, nodes, pods, containers)
+
+		k8sInfo := k8s.NewInfo(ctx, clientSet)
+		k8sInfo.Fetch(labelSelector, labelSelector)
+
+		err := db.InitDB(ctx, cacheDir, k8sInfo)
 
 		if err != nil {
 			log.Fatalf("Failed to init DB: %v", err)

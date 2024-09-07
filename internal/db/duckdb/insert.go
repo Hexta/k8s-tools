@@ -9,7 +9,7 @@ import (
 	"github.com/marcboeker/go-duckdb"
 )
 
-func InsertNodes(con driver.Conn, nodes []nodeutil.NodeInfo) error {
+func InsertNodes(con driver.Conn, nodes nodeutil.NodeInfoList) error {
 	appender, err := duckdb.NewAppenderFromConn(con, "k8s", "nodes")
 	if err != nil {
 		return err
@@ -36,7 +36,7 @@ func InsertNodes(con driver.Conn, nodes []nodeutil.NodeInfo) error {
 	return nil
 }
 
-func InsertPods(con driver.Conn, pods []podutil.PodInfo) error {
+func InsertPods(con driver.Conn, pods podutil.PodInfoList) error {
 	appender, err := duckdb.NewAppenderFromConn(con, "k8s", "pods")
 	if err != nil {
 		return err
@@ -64,7 +64,7 @@ func InsertPods(con driver.Conn, pods []podutil.PodInfo) error {
 	return nil
 }
 
-func InsertContainers(con driver.Conn, containers []containerutil.ContainerInfo) error {
+func InsertContainers(con driver.Conn, containers containerutil.ContainerInfoList) error {
 	appender, err := duckdb.NewAppenderFromConn(con, "k8s", "containers")
 	if err != nil {
 		return err

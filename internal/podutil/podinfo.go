@@ -9,5 +9,9 @@ type PodInfo struct {
 	CreationTimestamp time.Time
 	Labels            map[string]string
 	CPURequests       float64
+	CPULimits         float64
 	MemoryRequests    float64
+	MemoryLimits      float64
 }
+
+type PodInfoList []*PodInfo

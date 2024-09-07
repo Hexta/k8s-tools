@@ -9,3 +9,5 @@ type ContainerInfo struct {
 	MemoryRequests float64
 	MemoryLimits   float64
 }
+
+type ContainerInfoList []*ContainerInfo
