@@ -18,3 +18,14 @@ CREATE TABLE IF NOT EXISTS k8s.pods (
     memory_requests FLOAT,
     PRIMARY KEY (namespace, name)
 );
+
+CREATE TABLE IF NOT EXISTS k8s.containers (
+    name STRING,
+    namespace STRING,
+    pod STRING,
+    cpu_requests FLOAT,
+    cpu_limits FLOAT,
+    memory_requests FLOAT,
+    memory_limits FLOAT,
+    PRIMARY KEY (namespace, pod, name)
+);
