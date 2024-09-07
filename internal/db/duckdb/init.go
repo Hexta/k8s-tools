@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/Hexta/k8s-tools/internal/containerutil"
 	"github.com/Hexta/k8s-tools/internal/nodeutil"
 	"github.com/Hexta/k8s-tools/internal/podutil"
 	"github.com/marcboeker/go-duckdb"
@@ -22,7 +23,7 @@ var (
 	initSQL embed.FS
 )
 
-func InitDB(ctx context.Context, dataDir string, nodes []nodeutil.NodeInfo, pods []podutil.PodInfo) error {
+func InitDB(ctx context.Context, dataDir string, nodes []nodeutil.NodeInfo, pods []podutil.PodInfo, containers []containerutil.ContainerInfo) error {
 	dbDir := filepath.Join(dataDir, duckdbDir)
 
 	if _, err := os.Stat(dbDir); !os.IsNotExist(err) {
@@ -70,6 +71,11 @@ func InitDB(ctx context.Context, dataDir string, nodes []nodeutil.NodeInfo, pods
 	}
 
 	err = InsertPods(con, pods)
+	if err != nil {
+		return err
+	}
+
+	err = InsertContainers(con, containers)
 	if err != nil {
 		return err
 	}
