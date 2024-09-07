@@ -7,14 +7,14 @@ on:
     branches: [ "main" ]
 
 jobs:
+  build:
+    uses: ./.github/workflows/build.yml
+
   lint:
+    needs:
+      - build
     uses: ./.github/workflows/lint.yml
     permissions:
       contents: read
       pull-requests: read
       checks: write
-
-  push:
-    needs:
-      - lint
-    uses: ./.github/workflows/build.yml

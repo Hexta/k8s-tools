@@ -15,3 +15,5 @@ type NodeUtilisation struct {
 	CPU    float64
 	Memory float64
 }
+
+type NodeInfoList []*NodeInfo
