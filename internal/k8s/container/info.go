@@ -1,6 +1,6 @@
-package containerutil
+package container
 
-type ContainerInfo struct {
+type Info struct {
 	Name           string
 	Namespace      string
 	PodName        string
@@ -10,4 +10,4 @@ type ContainerInfo struct {
 	MemoryLimits   float64
 }
 
-type ContainerInfoList []*ContainerInfo
+type InfoList []*Info

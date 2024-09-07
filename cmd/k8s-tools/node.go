@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 
 	"github.com/Hexta/k8s-tools/internal/k8s"
-	"github.com/Hexta/k8s-tools/internal/nodeutil"
+	"github.com/Hexta/k8s-tools/internal/k8s/node"
 	"github.com/spf13/cobra"
 	"k8s.io/client-go/util/homedir"
 )
@@ -25,7 +25,7 @@ var nodeUtilisationCmd = &cobra.Command{
 		k8sInfo := k8s.NewInfo(ctx, clientSet)
 		k8sInfo.Fetch(labelSelector, labelSelector)
 
-		nodeutil.FormatNodeInfo(k8sInfo.Nodes)
+		node.FormatNodeInfo(k8sInfo.Nodes)
 	},
 }
 

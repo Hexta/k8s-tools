@@ -73,7 +73,7 @@ func InitDB(ctx context.Context, dataDir string, k8sInfo *k8s.Info) error {
 		return err
 	}
 
-	err = InsertContainers(con, k8sInfo.Containers)
+	err = InsertContainers(con, k8sInfo.Pods)
 	if err != nil {
 		return err
 	}

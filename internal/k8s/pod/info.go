@@ -1,11 +1,16 @@
-package podutil
+package pod
 
-import "time"
+import (
+	"time"
 
-type PodInfo struct {
+	"github.com/Hexta/k8s-tools/internal/k8s/container"
+)
+
+type Info struct {
 	Name              string
 	Namespace         string
 	NodeName          string
+	Containers        container.InfoList
 	CreationTimestamp time.Time
 	Labels            map[string]string
 	CPURequests       float64
@@ -14,4 +19,4 @@ type PodInfo struct {
 	MemoryLimits      float64
 }
 
-type PodInfoList []*PodInfo
+type InfoList []*Info
