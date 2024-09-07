@@ -1,8 +1,10 @@
-package nodeutil
+package node
 
-import "time"
+import (
+	"time"
+)
 
-type NodeInfo struct {
+type Info struct {
 	Name              string
 	Age               time.Duration
 	CreationTimestamp time.Time
@@ -16,4 +18,4 @@ type NodeUtilisation struct {
 	Memory float64
 }
 
-type NodeInfoList []*NodeInfo
+type InfoList []*Info
