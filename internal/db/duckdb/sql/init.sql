@@ -1,11 +1,13 @@
 CREATE SCHEMA IF NOT EXISTS k8s;
+
 CREATE TABLE IF NOT EXISTS k8s.nodes (
     name STRING PRIMARY KEY,
     creation_ts TIMESTAMP,
     instance_type STRING,
     cpu_utilisation FLOAT,
     memory_utilisation FLOAT,
-    labels MAP(STRING, STRING)
+    labels MAP(STRING, STRING),
+    address MAP(STRING, STRING)
 );
 
 CREATE TABLE IF NOT EXISTS k8s.pods (
@@ -18,6 +20,7 @@ CREATE TABLE IF NOT EXISTS k8s.pods (
     cpu_limits FLOAT,
     memory_requests FLOAT,
     memory_limits FLOAT,
+    ip STRING,
     PRIMARY KEY (namespace, name)
 );
 
@@ -37,5 +40,16 @@ CREATE TABLE IF NOT EXISTS k8s.deployments (
     namespace STRING,
     creation_ts TIMESTAMP,
     labels MAP(STRING, STRING),
+    replicas INTEGER,
+    PRIMARY KEY (namespace, name)
+);
+
+CREATE TABLE IF NOT EXISTS k8s.hpa (
+    name STRING,
+    namespace STRING,
+    creation_ts TIMESTAMP,
+    labels MAP(STRING, STRING),
+    current_replicas INTEGER,
+    desired_replicas INTEGER,
     PRIMARY KEY (namespace, name)
 );
