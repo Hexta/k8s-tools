@@ -23,10 +23,12 @@ var initDBCmd = &cobra.Command{
 		clientSet := k8s.GetClientSet(kubeconfig)
 
 		k8sInfo := k8s.NewInfo(ctx, clientSet)
-		k8sInfo.Fetch(labelSelector, labelSelector)
+		err := k8sInfo.Fetch(labelSelector, labelSelector)
+		if err != nil {
+			log.Fatalf("Failed to fetch K8s info: %v", err)
+		}
 
-		err := db.InitDB(ctx, cacheDir, k8sInfo)
-
+		err = db.InitDB(ctx, cacheDir, k8sInfo)
 		if err != nil {
 			log.Fatalf("Failed to init DB: %v", err)
 		}

@@ -6,6 +6,7 @@ import (
 
 	"github.com/Hexta/k8s-tools/internal/k8s"
 	"github.com/Hexta/k8s-tools/internal/k8s/node"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"k8s.io/client-go/util/homedir"
 )
@@ -23,7 +24,10 @@ var nodeUtilisationCmd = &cobra.Command{
 		clientSet := k8s.GetClientSet(kubeconfig)
 
 		k8sInfo := k8s.NewInfo(ctx, clientSet)
-		k8sInfo.Fetch(labelSelector, labelSelector)
+		err := k8sInfo.Fetch(labelSelector, labelSelector)
+		if err != nil {
+			log.Fatalf("Failed to fetch k8s info: %v", err)
+		}
 
 		node.FormatNodeInfo(k8sInfo.Nodes)
 	},

@@ -3,12 +3,14 @@ package duckdb
 import (
 	"database/sql/driver"
 
-	"github.com/Hexta/k8s-tools/internal/k8s/node"
+	"github.com/Hexta/k8s-tools/internal/k8s/deployment"
+	_ "github.com/Hexta/k8s-tools/internal/k8s/deployment"
+	k8snode "github.com/Hexta/k8s-tools/internal/k8s/node"
 	k8spod "github.com/Hexta/k8s-tools/internal/k8s/pod"
 	"github.com/marcboeker/go-duckdb"
 )
 
-func InsertNodes(con driver.Conn, nodes node.InfoList) error {
+func InsertNodes(con driver.Conn, nodes k8snode.InfoList) error {
 	appender, err := duckdb.NewAppenderFromConn(con, "k8s", "nodes")
 	if err != nil {
 		return err
@@ -49,7 +51,9 @@ func InsertPods(con driver.Conn, pods k8spod.InfoList) error {
 			pod.CreationTimestamp,
 			mapStringStringToDuckdbMap(pod.Labels),
 			pod.CPURequests,
+			pod.CPULimits,
 			pod.MemoryRequests,
+			pod.MemoryLimits,
 		)
 		if err != nil {
 			return err
@@ -83,6 +87,32 @@ func InsertContainers(con driver.Conn, pods k8spod.InfoList) error {
 			if err != nil {
 				return err
 			}
+		}
+	}
+
+	err = appender.Flush()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func InsertDeployments(con driver.Conn, deployments deployment.InfoList) error {
+	appender, err := duckdb.NewAppenderFromConn(con, "k8s", "deployments")
+	if err != nil {
+		return err
+	}
+
+	for _, item := range deployments {
+		err := appender.AppendRow(
+			item.Name,
+			item.Namespace,
+			item.CreationTimestamp,
+			mapStringStringToDuckdbMap(item.Labels),
+		)
+		if err != nil {
+			return err
 		}
 	}
 

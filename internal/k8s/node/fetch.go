@@ -2,6 +2,7 @@ package node
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -10,36 +11,47 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-func Fetch(ctx context.Context, clientset *kubernetes.Clientset, labelSelector string) InfoList {
-	list, err := clientset.CoreV1().Nodes().List(ctx, v1.ListOptions{
-		TypeMeta:      v1.TypeMeta{},
-		LabelSelector: labelSelector,
-	})
-	if err != nil {
-		log.Panicf("Failed to list nodes: %v", err)
-	}
+func Fetch(ctx context.Context, clientset *kubernetes.Clientset, labelSelector string) (InfoList, error) {
+	var continueToken string
+	nodes := make(InfoList, 0, 10000)
 
-	nodes := make(InfoList, 0, len(list.Items))
-	podsPerNode, err := listPodsPerNode(ctx, clientset)
-
-	if err != nil {
-		log.Errorf("Failed to list pods per node: %v", err)
-	}
-
-	for idx := range list.Items {
-		node := &list.Items[idx]
-		instanceType := node.GetLabels()["node.kubernetes.io/instance-type"]
-		utilisation := calculateNodeUtilisation(node, podsPerNode)
-		nodes = append(nodes, &Info{
-			Name:              node.Name,
-			Age:               time.Since(node.CreationTimestamp.Time),
-			CreationTimestamp: node.CreationTimestamp.Time,
-			InstanceType:      instanceType,
-			Utilisation:       utilisation,
-			Labels:            node.Labels,
+	for {
+		log.Debugf("Listing nodes with label selector %q, continue token %q", labelSelector, continueToken)
+		list, err := clientset.CoreV1().Nodes().List(ctx, v1.ListOptions{
+			TypeMeta:      v1.TypeMeta{},
+			LabelSelector: labelSelector,
+			Continue:      continueToken,
 		})
+		if err != nil {
+			return nil, fmt.Errorf("failed to list nodes: %v", err)
+		}
+
+		podsPerNode, err := listPodsPerNode(ctx, clientset)
+
+		if err != nil {
+			return nil, fmt.Errorf("failed to list pods per node: %v", err)
+		}
+
+		for idx := range list.Items {
+			node := &list.Items[idx]
+			instanceType := node.GetLabels()["node.kubernetes.io/instance-type"]
+			utilisation := calculateNodeUtilisation(node, podsPerNode)
+			nodes = append(nodes, &Info{
+				Name:              node.Name,
+				Age:               time.Since(node.CreationTimestamp.Time),
+				CreationTimestamp: node.CreationTimestamp.Time,
+				InstanceType:      instanceType,
+				Utilisation:       utilisation,
+				Labels:            node.Labels,
+			})
+		}
+
+		if continueToken = list.GetContinue(); continueToken == "" {
+			break
+		}
 	}
-	return nodes
+
+	return nodes, nil
 }
 
 func listPodsPerNode(ctx context.Context, clientset *kubernetes.Clientset) (map[string][]*apicorev1.Pod, error) {

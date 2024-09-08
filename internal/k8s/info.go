@@ -2,9 +2,11 @@ package k8s
 
 import (
 	"context"
+	"errors"
 	"sync"
 
 	"github.com/Hexta/k8s-tools/internal/k8s/container"
+	"github.com/Hexta/k8s-tools/internal/k8s/deployment"
 	k8snode "github.com/Hexta/k8s-tools/internal/k8s/node"
 	k8spod "github.com/Hexta/k8s-tools/internal/k8s/pod"
 	log "github.com/sirupsen/logrus"
@@ -12,11 +14,12 @@ import (
 )
 
 type Info struct {
-	Pods       k8spod.InfoList
-	Nodes      k8snode.InfoList
-	Containers container.InfoList
-	ctx        context.Context
-	clientset  *kubernetes.Clientset
+	Pods        k8spod.InfoList
+	Nodes       k8snode.InfoList
+	Containers  container.InfoList
+	Deployments deployment.InfoList
+	ctx         context.Context
+	clientset   *kubernetes.Clientset
 }
 
 func NewInfo(ctx context.Context, clientset *kubernetes.Clientset) *Info {
@@ -26,28 +29,58 @@ func NewInfo(ctx context.Context, clientset *kubernetes.Clientset) *Info {
 	}
 }
 
-func (r *Info) Fetch(nodeLabelSelector string, podLabelSelector string) {
+func (r *Info) Fetch(nodeLabelSelector string, podLabelSelector string) error {
 	wg := sync.WaitGroup{}
 
-	wg.Add(1)
-	go func() { r.fetchPods(podLabelSelector); wg.Done() }()
+	errorCh := make(chan error, 8)
 
 	wg.Add(1)
-	go func() { r.fetchNodes(nodeLabelSelector); wg.Done() }()
+	go func() { defer wg.Done(); err := r.fetchPods(podLabelSelector); errorCh <- err }()
+
+	wg.Add(1)
+	go func() { defer wg.Done(); err := r.fetchNodes(nodeLabelSelector); errorCh <- err }()
+
+	wg.Add(1)
+	go func() { defer wg.Done(); err := r.fetchDeployments(nodeLabelSelector); errorCh <- err }()
 
 	wg.Wait()
+
+	close(errorCh)
+
+	errorList := make([]error, 0, len(errorCh))
+	for err := range errorCh {
+		if err != nil {
+			errorList = append(errorList, err)
+		}
+	}
+
+	return errors.Join(errorList...)
 }
 
-func (r *Info) fetchPods(labelSelector string) {
+func (r *Info) fetchPods(labelSelector string) error {
 	log.Debugf("Listing pods - start")
 	defer log.Debugf("Listing pods - done")
 
-	r.Pods = k8spod.Fetch(r.ctx, r.clientset, labelSelector)
+	var err error
+	r.Pods, err = k8spod.Fetch(r.ctx, r.clientset, labelSelector)
+
+	return err
 }
 
-func (r *Info) fetchNodes(labelSelector string) {
+func (r *Info) fetchNodes(labelSelector string) error {
 	log.Debugf("Listing nodes - start")
 	defer log.Debugf("Listing nodes - done")
 
-	r.Nodes = k8snode.Fetch(r.ctx, r.clientset, labelSelector)
+	var err error
+	r.Nodes, err = k8snode.Fetch(r.ctx, r.clientset, labelSelector)
+	return err
+}
+
+func (r *Info) fetchDeployments(labelSelector string) error {
+	log.Debugf("Listing deployments - start")
+	defer log.Debugf("Listing deployments - done")
+
+	var err error
+	r.Deployments, err = deployment.Fetch(r.ctx, r.clientset, labelSelector)
+	return err
 }

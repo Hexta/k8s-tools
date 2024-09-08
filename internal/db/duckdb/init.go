@@ -78,6 +78,11 @@ func InitDB(ctx context.Context, dataDir string, k8sInfo *k8s.Info) error {
 		return err
 	}
 
+	err = InsertDeployments(con, k8sInfo.Deployments)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
