@@ -17,6 +17,7 @@ type Info struct {
 	CPULimits         float64
 	MemoryRequests    float64
 	MemoryLimits      float64
+	IP                string
 }
 
 type InfoList []*Info

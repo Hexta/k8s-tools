@@ -11,6 +11,7 @@ type Info struct {
 	InstanceType      string
 	Utilisation       NodeUtilisation
 	Labels            map[string]string
+	Address           map[string]string
 }
 
 type NodeUtilisation struct {

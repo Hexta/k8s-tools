@@ -5,8 +5,9 @@ A toolset for inspecting Kubernetes clusters.
 Provides SQL interface for querying information about K8s:
 * Containers
 * Deployments
-* Pods
+* HPA
 * Nodes
+* Pods
 
 ## Getting Started
 

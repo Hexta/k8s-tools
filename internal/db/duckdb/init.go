@@ -83,6 +83,11 @@ func InitDB(ctx context.Context, dataDir string, k8sInfo *k8s.Info) error {
 		return err
 	}
 
+	err = InsertHPAs(con, k8sInfo.HPAs)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 

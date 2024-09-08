@@ -1,4 +1,4 @@
-package deployment
+package hpa
 
 import "time"
 
@@ -7,7 +7,8 @@ type Info struct {
 	Namespace         string
 	CreationTimestamp time.Time
 	Labels            map[string]string
-	Replicas          *int32
+	CurrentReplicas   int32
+	DesiredReplicas   int32
 }
 
 type InfoList []*Info

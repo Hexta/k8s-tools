@@ -10,15 +10,14 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-func Fetch(ctx context.Context, clientset *kubernetes.Clientset, labelSelector string) (InfoList, error) {
+func Fetch(ctx context.Context, clientset *kubernetes.Clientset) (InfoList, error) {
 	var continueToken string
 	pods := make(InfoList, 0, 10000)
 
 	for {
-		log.Debugf("Listing pods with label selector %q, continue token %q", labelSelector, continueToken)
+		log.Debugf("Listing pods with continue token %q", continueToken)
 		list, err := clientset.CoreV1().Pods(v1.NamespaceAll).List(ctx, v1.ListOptions{
-			LabelSelector: labelSelector,
-			Continue:      continueToken,
+			Continue: continueToken,
 		})
 		if err != nil {
 			return nil, fmt.Errorf("failed to list pods: %v", err)
@@ -71,6 +70,7 @@ func Fetch(ctx context.Context, clientset *kubernetes.Clientset, labelSelector s
 				CPULimits:         podCPULimits,
 				MemoryRequests:    podMemoryRequests,
 				MemoryLimits:      podMemoryLimits,
+				IP:                pod.Status.PodIP,
 			})
 		}
 

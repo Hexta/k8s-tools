@@ -11,16 +11,14 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-func Fetch(ctx context.Context, clientset *kubernetes.Clientset, labelSelector string) (InfoList, error) {
+func Fetch(ctx context.Context, clientset *kubernetes.Clientset) (InfoList, error) {
 	var continueToken string
 	nodes := make(InfoList, 0, 10000)
 
 	for {
-		log.Debugf("Listing nodes with label selector %q, continue token %q", labelSelector, continueToken)
+		log.Debugf("Listing nodes with continue token %q", continueToken)
 		list, err := clientset.CoreV1().Nodes().List(ctx, v1.ListOptions{
-			TypeMeta:      v1.TypeMeta{},
-			LabelSelector: labelSelector,
-			Continue:      continueToken,
+			Continue: continueToken,
 		})
 		if err != nil {
 			return nil, fmt.Errorf("failed to list nodes: %v", err)
@@ -36,6 +34,13 @@ func Fetch(ctx context.Context, clientset *kubernetes.Clientset, labelSelector s
 			node := &list.Items[idx]
 			instanceType := node.GetLabels()["node.kubernetes.io/instance-type"]
 			utilisation := calculateNodeUtilisation(node, podsPerNode)
+
+			addrMap := make(map[string]string, 4)
+
+			for _, address := range node.Status.Addresses {
+				addrMap[string(address.Type)] = address.Address
+			}
+
 			nodes = append(nodes, &Info{
 				Name:              node.Name,
 				Age:               time.Since(node.CreationTimestamp.Time),
@@ -43,6 +48,7 @@ func Fetch(ctx context.Context, clientset *kubernetes.Clientset, labelSelector s
 				InstanceType:      instanceType,
 				Utilisation:       utilisation,
 				Labels:            node.Labels,
+				Address:           addrMap,
 			})
 		}
 

@@ -1,4 +1,4 @@
-package deployment
+package hpa
 
 import (
 	"context"
@@ -15,7 +15,7 @@ func Fetch(ctx context.Context, clientset *kubernetes.Clientset) (InfoList, erro
 
 	for {
 		log.Debugf("Listing deployments with continue token %q", continueToken)
-		list, err := clientset.AppsV1().Deployments(v1.NamespaceAll).List(ctx, v1.ListOptions{
+		list, err := clientset.AutoscalingV2().HorizontalPodAutoscalers(v1.NamespaceAll).List(ctx, v1.ListOptions{
 			Continue: continueToken,
 		})
 		if err != nil {
@@ -29,7 +29,8 @@ func Fetch(ctx context.Context, clientset *kubernetes.Clientset) (InfoList, erro
 				Namespace:         item.Namespace,
 				CreationTimestamp: item.CreationTimestamp.Time,
 				Labels:            item.Labels,
-				Replicas:          item.Spec.Replicas,
+				CurrentReplicas:   item.Status.CurrentReplicas,
+				DesiredReplicas:   item.Status.DesiredReplicas,
 			})
 		}
 
