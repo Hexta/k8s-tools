@@ -88,6 +88,11 @@ func InitDB(ctx context.Context, dataDir string, k8sInfo *k8s.Info) error {
 		return err
 	}
 
+	err = InsertSTS(con, k8sInfo.STSs)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 

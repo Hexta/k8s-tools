@@ -1,4 +1,4 @@
-package hpa
+package sts
 
 import (
 	"context"
@@ -14,8 +14,8 @@ func Fetch(ctx context.Context, clientset *kubernetes.Clientset) (InfoList, erro
 	infoList := make(InfoList, 0, 10000)
 
 	for {
-		log.Debugf("Listing HPAs with continue token %q", continueToken)
-		list, err := clientset.AutoscalingV2().HorizontalPodAutoscalers(v1.NamespaceAll).List(ctx, v1.ListOptions{
+		log.Debugf("Listing STS with continue token %q", continueToken)
+		list, err := clientset.AppsV1().StatefulSets(v1.NamespaceAll).List(ctx, v1.ListOptions{
 			Continue: continueToken,
 		})
 		if err != nil {
@@ -29,8 +29,7 @@ func Fetch(ctx context.Context, clientset *kubernetes.Clientset) (InfoList, erro
 				Namespace:         item.Namespace,
 				CreationTimestamp: item.CreationTimestamp.Time,
 				Labels:            item.Labels,
-				CurrentReplicas:   item.Status.CurrentReplicas,
-				DesiredReplicas:   item.Status.DesiredReplicas,
+				Replicas:          item.Status.Replicas,
 			})
 		}
 
