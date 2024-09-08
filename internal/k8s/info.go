@@ -10,6 +10,7 @@ import (
 	"github.com/Hexta/k8s-tools/internal/k8s/hpa"
 	k8snode "github.com/Hexta/k8s-tools/internal/k8s/node"
 	k8spod "github.com/Hexta/k8s-tools/internal/k8s/pod"
+	"github.com/Hexta/k8s-tools/internal/k8s/sts"
 	log "github.com/sirupsen/logrus"
 	"k8s.io/client-go/kubernetes"
 )
@@ -20,6 +21,7 @@ type Info struct {
 	Containers  container.InfoList
 	Deployments deployment.InfoList
 	HPAs        hpa.InfoList
+	STSs        sts.InfoList
 	ctx         context.Context
 	clientset   *kubernetes.Clientset
 }
@@ -47,6 +49,9 @@ func (r *Info) Fetch(nodeLabelSelector string, podLabelSelector string) error {
 
 	wg.Add(1)
 	go func() { defer wg.Done(); err := r.fetchHPAs(); errorCh <- err }()
+
+	wg.Add(1)
+	go func() { defer wg.Done(); err := r.fetchSTSs(); errorCh <- err }()
 
 	errorList := make([]error, 0, len(errorCh))
 	go func() {
@@ -97,5 +102,14 @@ func (r *Info) fetchHPAs() error {
 
 	var err error
 	r.HPAs, err = hpa.Fetch(r.ctx, r.clientset)
+	return err
+}
+
+func (r *Info) fetchSTSs() error {
+	log.Debugf("Listing STSs - start")
+	defer log.Debugf("Listing STSs - done")
+
+	var err error
+	r.STSs, err = sts.Fetch(r.ctx, r.clientset)
 	return err
 }

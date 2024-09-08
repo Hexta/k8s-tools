@@ -53,3 +53,12 @@ CREATE TABLE IF NOT EXISTS k8s.hpa (
     desired_replicas INTEGER,
     PRIMARY KEY (namespace, name)
 );
+
+CREATE TABLE IF NOT EXISTS k8s.sts (
+    name STRING,
+    namespace STRING,
+    creation_ts TIMESTAMP,
+    labels MAP(STRING, STRING),
+    replicas INTEGER,
+    PRIMARY KEY (namespace, name)
+);

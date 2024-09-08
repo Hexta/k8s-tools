@@ -8,6 +8,7 @@ import (
 	"github.com/Hexta/k8s-tools/internal/k8s/hpa"
 	k8snode "github.com/Hexta/k8s-tools/internal/k8s/node"
 	k8spod "github.com/Hexta/k8s-tools/internal/k8s/pod"
+	"github.com/Hexta/k8s-tools/internal/k8s/sts"
 	"github.com/marcboeker/go-duckdb"
 )
 
@@ -147,6 +148,33 @@ func InsertHPAs(con driver.Conn, items hpa.InfoList) error {
 			mapStringStringToDuckdbMap(item.Labels),
 			item.CurrentReplicas,
 			item.DesiredReplicas,
+		)
+		if err != nil {
+			return err
+		}
+	}
+
+	err = appender.Flush()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func InsertSTS(con driver.Conn, items sts.InfoList) error {
+	appender, err := duckdb.NewAppenderFromConn(con, "k8s", "sts")
+	if err != nil {
+		return err
+	}
+
+	for _, item := range items {
+		err := appender.AppendRow(
+			item.Name,
+			item.Namespace,
+			item.CreationTimestamp,
+			mapStringStringToDuckdbMap(item.Labels),
+			item.Replicas,
 		)
 		if err != nil {
 			return err
