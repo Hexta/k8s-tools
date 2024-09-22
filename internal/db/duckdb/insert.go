@@ -5,6 +5,7 @@ import (
 
 	"github.com/Hexta/k8s-tools/internal/k8s/deployment"
 	_ "github.com/Hexta/k8s-tools/internal/k8s/deployment"
+	"github.com/Hexta/k8s-tools/internal/k8s/ds"
 	"github.com/Hexta/k8s-tools/internal/k8s/hpa"
 	k8snode "github.com/Hexta/k8s-tools/internal/k8s/node"
 	k8spod "github.com/Hexta/k8s-tools/internal/k8s/pod"
@@ -12,8 +13,19 @@ import (
 	"github.com/marcboeker/go-duckdb"
 )
 
+const (
+	Schema           = "k8s"
+	NodesTable       = "nodes"
+	PodsTable        = "pods"
+	ContainersTable  = "containers"
+	DeploymentsTable = "deployments"
+	HPATable         = "hpa"
+	STSTable         = "sts"
+	DSTable          = "ds"
+)
+
 func InsertNodes(con driver.Conn, nodes k8snode.InfoList) error {
-	appender, err := duckdb.NewAppenderFromConn(con, "k8s", "nodes")
+	appender, err := duckdb.NewAppenderFromConn(con, Schema, NodesTable)
 	if err != nil {
 		return err
 	}
@@ -41,7 +53,7 @@ func InsertNodes(con driver.Conn, nodes k8snode.InfoList) error {
 }
 
 func InsertPods(con driver.Conn, pods k8spod.InfoList) error {
-	appender, err := duckdb.NewAppenderFromConn(con, "k8s", "pods")
+	appender, err := duckdb.NewAppenderFromConn(con, Schema, PodsTable)
 	if err != nil {
 		return err
 	}
@@ -72,7 +84,7 @@ func InsertPods(con driver.Conn, pods k8spod.InfoList) error {
 }
 
 func InsertContainers(con driver.Conn, pods k8spod.InfoList) error {
-	appender, err := duckdb.NewAppenderFromConn(con, "k8s", "containers")
+	appender, err := duckdb.NewAppenderFromConn(con, Schema, ContainersTable)
 	if err != nil {
 		return err
 	}
@@ -103,7 +115,7 @@ func InsertContainers(con driver.Conn, pods k8spod.InfoList) error {
 }
 
 func InsertDeployments(con driver.Conn, deployments deployment.InfoList) error {
-	appender, err := duckdb.NewAppenderFromConn(con, "k8s", "deployments")
+	appender, err := duckdb.NewAppenderFromConn(con, Schema, DeploymentsTable)
 	if err != nil {
 		return err
 	}
@@ -135,7 +147,7 @@ func InsertDeployments(con driver.Conn, deployments deployment.InfoList) error {
 }
 
 func InsertHPAs(con driver.Conn, items hpa.InfoList) error {
-	appender, err := duckdb.NewAppenderFromConn(con, "k8s", "hpa")
+	appender, err := duckdb.NewAppenderFromConn(con, Schema, HPATable)
 	if err != nil {
 		return err
 	}
@@ -163,7 +175,7 @@ func InsertHPAs(con driver.Conn, items hpa.InfoList) error {
 }
 
 func InsertSTS(con driver.Conn, items sts.InfoList) error {
-	appender, err := duckdb.NewAppenderFromConn(con, "k8s", "sts")
+	appender, err := duckdb.NewAppenderFromConn(con, Schema, STSTable)
 	if err != nil {
 		return err
 	}
@@ -175,6 +187,38 @@ func InsertSTS(con driver.Conn, items sts.InfoList) error {
 			item.CreationTimestamp,
 			mapStringStringToDuckdbMap(item.Labels),
 			item.Replicas,
+		)
+		if err != nil {
+			return err
+		}
+	}
+
+	err = appender.Flush()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func InsertDS(con driver.Conn, items ds.InfoList) error {
+	appender, err := duckdb.NewAppenderFromConn(con, Schema, DSTable)
+	if err != nil {
+		return err
+	}
+
+	for _, item := range items {
+		err := appender.AppendRow(
+			item.Name,
+			item.Namespace,
+			item.CreationTimestamp,
+			mapStringStringToDuckdbMap(item.Labels),
+			item.CurrentNumberScheduled,
+			item.DesiredNumberScheduled,
+			item.NumberAvailable,
+			item.NumberMisscheduled,
+			item.NumberReady,
+			item.NumberUnavailable,
 		)
 		if err != nil {
 			return err

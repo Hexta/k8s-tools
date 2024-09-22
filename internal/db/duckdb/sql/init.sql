@@ -62,3 +62,17 @@ CREATE TABLE IF NOT EXISTS k8s.sts (
     replicas INTEGER,
     PRIMARY KEY (namespace, name)
 );
+
+CREATE TABLE IF NOT EXISTS k8s.ds (
+    name STRING,
+    namespace STRING,
+    creation_ts TIMESTAMP,
+    labels MAP(STRING, STRING),
+    current_number_scheduled INTEGER,
+	desired_number_scheduled INTEGER,
+	number_available INTEGER,
+	number_misscheduled INTEGER,
+	number_ready INTEGER,
+	number_unavailable INTEGER,
+    PRIMARY KEY (namespace, name)
+);

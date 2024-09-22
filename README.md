@@ -4,6 +4,7 @@ A toolset for inspecting Kubernetes clusters.
 
 Provides SQL interface for querying information about K8s:
 * Containers
+* DaemonSets
 * Deployments
 * HPA
 * Nodes
@@ -22,6 +23,8 @@ CGO_ENABLED=1 go install github.com/Hexta/k8s-tools/cmd/k8s-tools@latest
 ```
 
 ## Usage
+
+[CLI Documentation](docs/cli/k8s-tools.md)
 
 ### Examples
 

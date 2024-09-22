@@ -58,39 +58,38 @@ func InitDB(ctx context.Context, dataDir string, k8sInfo *k8s.Info) error {
 		return fmt.Errorf("failed to ping DB: %w", err)
 	}
 
-	err = runDDL(ctx, db)
-	if err != nil {
+	if err = runDDL(ctx, db); err != nil {
 		return err
 	}
 
-	err = InsertNodes(con, k8sInfo.Nodes)
-	if err != nil {
-		return err
+	functionsToRun := []func(con driver.Conn) error{
+		func(con driver.Conn) error {
+			return InsertNodes(con, k8sInfo.Nodes)
+		},
+		func(con driver.Conn) error {
+			return InsertPods(con, k8sInfo.Pods)
+		},
+		func(con driver.Conn) error {
+			return InsertContainers(con, k8sInfo.Pods)
+		},
+		func(con driver.Conn) error {
+			return InsertDeployments(con, k8sInfo.Deployments)
+		},
+		func(con driver.Conn) error {
+			return InsertHPAs(con, k8sInfo.HPAs)
+		},
+		func(con driver.Conn) error {
+			return InsertSTS(con, k8sInfo.STSs)
+		},
+		func(con driver.Conn) error {
+			return InsertDS(con, k8sInfo.DSs)
+		},
 	}
 
-	err = InsertPods(con, k8sInfo.Pods)
-	if err != nil {
-		return err
-	}
-
-	err = InsertContainers(con, k8sInfo.Pods)
-	if err != nil {
-		return err
-	}
-
-	err = InsertDeployments(con, k8sInfo.Deployments)
-	if err != nil {
-		return err
-	}
-
-	err = InsertHPAs(con, k8sInfo.HPAs)
-	if err != nil {
-		return err
-	}
-
-	err = InsertSTS(con, k8sInfo.STSs)
-	if err != nil {
-		return err
+	for _, fn := range functionsToRun {
+		if err = fn(con); err != nil {
+			return err
+		}
 	}
 
 	return nil

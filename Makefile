@@ -27,3 +27,7 @@ test:
 .PHONY: lint
 lint:
 	@golangci-lint run -v ./...
+
+.PHONY: docs
+docs: build
+	@./dist/k8s-tools docs generate

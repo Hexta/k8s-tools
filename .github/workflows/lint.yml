@@ -22,7 +22,7 @@ jobs:
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v6
         with:
-          version: v1.60
+          version: v1.61
 
   pre-commit:
     runs-on: ubuntu-latest
@@ -54,3 +54,4 @@ jobs:
           --hook-stage manual
           --from-ref ${{ github.event.pull_request.base.sha || github.event.before }}
           --to-ref ${{ github.event.pull_request.head.sha || github.event.after }}
+          --show-diff-on-failure

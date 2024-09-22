@@ -4,13 +4,16 @@ import (
 	"context"
 	"errors"
 	"sync"
+	"time"
 
 	"github.com/Hexta/k8s-tools/internal/k8s/container"
 	"github.com/Hexta/k8s-tools/internal/k8s/deployment"
+	"github.com/Hexta/k8s-tools/internal/k8s/ds"
 	"github.com/Hexta/k8s-tools/internal/k8s/hpa"
 	k8snode "github.com/Hexta/k8s-tools/internal/k8s/node"
 	k8spod "github.com/Hexta/k8s-tools/internal/k8s/pod"
 	"github.com/Hexta/k8s-tools/internal/k8s/sts"
+	"github.com/sethvargo/go-retry"
 	log "github.com/sirupsen/logrus"
 	"k8s.io/client-go/kubernetes"
 )
@@ -20,10 +23,18 @@ type Info struct {
 	Nodes       k8snode.InfoList
 	Containers  container.InfoList
 	Deployments deployment.InfoList
+	DSs         ds.InfoList
 	HPAs        hpa.InfoList
 	STSs        sts.InfoList
 	ctx         context.Context
 	clientset   *kubernetes.Clientset
+}
+
+type FetchOptions struct {
+	RetryInitialInterval time.Duration
+	RetryJitterPercent   uint64
+	RetryMaxAttempts     uint64
+	RetryMaxInterval     time.Duration
 }
 
 func NewInfo(ctx context.Context, clientset *kubernetes.Clientset) *Info {
@@ -33,25 +44,9 @@ func NewInfo(ctx context.Context, clientset *kubernetes.Clientset) *Info {
 	}
 }
 
-func (r *Info) Fetch(nodeLabelSelector string, podLabelSelector string) error {
+func (r *Info) Fetch(opts FetchOptions) error {
 	wg := sync.WaitGroup{}
-
 	errorCh := make(chan error, 8)
-
-	wg.Add(1)
-	go func() { defer wg.Done(); err := r.fetchPods(); errorCh <- err }()
-
-	wg.Add(1)
-	go func() { defer wg.Done(); err := r.fetchNodes(); errorCh <- err }()
-
-	wg.Add(1)
-	go func() { defer wg.Done(); err := r.fetchDeployments(); errorCh <- err }()
-
-	wg.Add(1)
-	go func() { defer wg.Done(); err := r.fetchHPAs(); errorCh <- err }()
-
-	wg.Add(1)
-	go func() { defer wg.Done(); err := r.fetchSTSs(); errorCh <- err }()
 
 	errorList := make([]error, 0, len(errorCh))
 	go func() {
@@ -62,10 +57,37 @@ func (r *Info) Fetch(nodeLabelSelector string, podLabelSelector string) error {
 		}
 	}()
 
+	r.startFetchFunc(r.fetchPods, &wg, opts, errorCh)
+	r.startFetchFunc(r.fetchNodes, &wg, opts, errorCh)
+	r.startFetchFunc(r.fetchDeployments, &wg, opts, errorCh)
+	r.startFetchFunc(r.fetchHPAs, &wg, opts, errorCh)
+	r.startFetchFunc(r.fetchSTSs, &wg, opts, errorCh)
+	r.startFetchFunc(r.fetchDSs, &wg, opts, errorCh)
+
 	wg.Wait()
 	close(errorCh)
 
 	return errors.Join(errorList...)
+}
+
+func (r *Info) startFetchFunc(f func() error, wg *sync.WaitGroup, opts FetchOptions, errorCh chan error) {
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		err := retry.Do(r.ctx, newBackoff(opts), func(ctx context.Context) error {
+			return f()
+		})
+		errorCh <- err
+	}()
+}
+
+func newBackoff(opts FetchOptions) retry.Backoff {
+	b := retry.NewFibonacci(opts.RetryInitialInterval)
+	b = retry.WithJitterPercent(opts.RetryJitterPercent, b)
+	b = retry.WithMaxRetries(opts.RetryMaxAttempts, b)
+	b = retry.WithCappedDuration(opts.RetryMaxInterval, b)
+
+	return b
 }
 
 func (r *Info) fetchPods() error {
@@ -111,5 +133,14 @@ func (r *Info) fetchSTSs() error {
 
 	var err error
 	r.STSs, err = sts.Fetch(r.ctx, r.clientset)
+	return err
+}
+
+func (r *Info) fetchDSs() error {
+	log.Debugf("Listing DSs - start")
+	defer log.Debugf("Listing DSs - done")
+
+	var err error
+	r.DSs, err = ds.Fetch(r.ctx, r.clientset)
 	return err
 }
