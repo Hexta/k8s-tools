@@ -3,11 +3,11 @@ package sts
 import "time"
 
 type Info struct {
-	Name              string
-	Namespace         string
-	CreationTimestamp time.Time
-	Labels            map[string]string
-	Replicas          int32
+	Name              string            `db:"name"`
+	Namespace         string            `db:"namespace"`
+	CreationTimestamp time.Time         `db:"creation_ts"`
+	Labels            map[string]string `db:"labels"`
+	Replicas          int32             `db:"replicas"`
 }
 
 type InfoList []*Info

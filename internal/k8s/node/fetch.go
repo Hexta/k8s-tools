@@ -46,7 +46,8 @@ func Fetch(ctx context.Context, clientset *kubernetes.Clientset) (InfoList, erro
 				Age:               time.Since(node.CreationTimestamp.Time),
 				CreationTimestamp: node.CreationTimestamp.Time,
 				InstanceType:      instanceType,
-				Utilisation:       utilisation,
+				CPUUtilisation:    utilisation.CPU,
+				MemoryUtilisation: utilisation.Memory,
 				Labels:            node.Labels,
 				Address:           addrMap,
 			})
@@ -79,7 +80,7 @@ func listPodsPerNode(ctx context.Context, clientset *kubernetes.Clientset) (map[
 	return podsPerNode, nil
 }
 
-func calculateNodeUtilisation(node *apicorev1.Node, podsPerNode map[string][]*apicorev1.Pod) NodeUtilisation {
+func calculateNodeUtilisation(node *apicorev1.Node, podsPerNode map[string][]*apicorev1.Pod) Utilisation {
 	pods := podsPerNode[node.Name]
 
 	requestsCpu := float64(0)
@@ -92,7 +93,7 @@ func calculateNodeUtilisation(node *apicorev1.Node, podsPerNode map[string][]*ap
 		}
 	}
 
-	return NodeUtilisation{
+	return Utilisation{
 		CPU:    requestsCpu / node.Status.Allocatable.Cpu().AsApproximateFloat64(),
 		Memory: requestsMemory / node.Status.Allocatable.Memory().AsApproximateFloat64(),
 	}

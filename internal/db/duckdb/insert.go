@@ -1,8 +1,12 @@
 package duckdb
 
 import (
+	"database/sql"
 	"database/sql/driver"
+	"fmt"
+	"reflect"
 
+	"github.com/Hexta/k8s-tools/internal/k8s/container"
 	"github.com/Hexta/k8s-tools/internal/k8s/deployment"
 	_ "github.com/Hexta/k8s-tools/internal/k8s/deployment"
 	"github.com/Hexta/k8s-tools/internal/k8s/ds"
@@ -14,37 +18,33 @@ import (
 )
 
 const (
-	Schema           = "k8s"
-	NodesTable       = "nodes"
-	PodsTable        = "pods"
-	ContainersTable  = "containers"
-	DeploymentsTable = "deployments"
-	HPATable         = "hpa"
-	STSTable         = "sts"
-	DSTable          = "ds"
+	Schema                = "k8s"
+	NodesTable            = "nodes"
+	PodsTable             = "pods"
+	ContainersTable       = "containers"
+	DeploymentsTable      = "deployments"
+	HPATable              = "hpa"
+	STSTable              = "sts"
+	DSTable               = "ds"
+	containerListCapacity = 65536
 )
 
-func InsertNodes(con driver.Conn, nodes k8snode.InfoList) error {
-	appender, err := duckdb.NewAppenderFromConn(con, Schema, NodesTable)
-	if err != nil {
-		return err
+func InsertNodes(con driver.Conn, db *sql.DB, items k8snode.InfoList) error {
+	return doInsert[k8snode.Info](con, db, Schema, NodesTable, items)
+}
+
+func InsertPods(con driver.Conn, db *sql.DB, items k8spod.InfoList) error {
+	return doInsert[k8spod.Info](con, db, Schema, PodsTable, items)
+}
+
+func InsertContainers(con driver.Conn, db *sql.DB, items k8spod.InfoList) error {
+	containers := make(container.InfoList, 0, containerListCapacity)
+
+	for _, pod := range items {
+		containers = append(containers, pod.Containers...)
 	}
 
-	for _, node := range nodes {
-		err := appender.AppendRow(
-			node.Name,
-			node.CreationTimestamp,
-			node.InstanceType,
-			node.Utilisation.CPU,
-			node.Utilisation.Memory,
-			mapStringStringToDuckdbMap(node.Labels),
-			mapStringStringToDuckdbMap(node.Address),
-		)
-		if err != nil {
-			return err
-		}
-	}
-	err = appender.Flush()
+	err := doInsert[container.Info](con, db, Schema, ContainersTable, containers)
 	if err != nil {
 		return err
 	}
@@ -52,185 +52,48 @@ func InsertNodes(con driver.Conn, nodes k8snode.InfoList) error {
 	return nil
 }
 
-func InsertPods(con driver.Conn, pods k8spod.InfoList) error {
-	appender, err := duckdb.NewAppenderFromConn(con, Schema, PodsTable)
-	if err != nil {
-		return err
-	}
-
-	for _, pod := range pods {
-		err := appender.AppendRow(
-			pod.Name,
-			pod.Namespace,
-			pod.NodeName,
-			pod.CreationTimestamp,
-			mapStringStringToDuckdbMap(pod.Labels),
-			pod.CPURequests,
-			pod.CPULimits,
-			pod.MemoryRequests,
-			pod.MemoryLimits,
-			pod.IP,
-		)
-		if err != nil {
-			return err
-		}
-	}
-	err = appender.Flush()
-	if err != nil {
-		return err
-	}
-
-	return nil
+func InsertDeployments(con driver.Conn, db *sql.DB, items deployment.InfoList) error {
+	return doInsert[deployment.Info](con, db, Schema, DeploymentsTable, items)
 }
 
-func InsertContainers(con driver.Conn, pods k8spod.InfoList) error {
-	appender, err := duckdb.NewAppenderFromConn(con, Schema, ContainersTable)
-	if err != nil {
-		return err
-	}
-
-	for _, pod := range pods {
-		for _, container := range pod.Containers {
-			err := appender.AppendRow(
-				container.Name,
-				container.Namespace,
-				container.PodName,
-				container.CPURequests,
-				container.CPULimits,
-				container.MemoryRequests,
-				container.MemoryLimits,
-			)
-			if err != nil {
-				return err
-			}
-		}
-	}
-
-	err = appender.Flush()
-	if err != nil {
-		return err
-	}
-
-	return nil
+func InsertHPAs(con driver.Conn, db *sql.DB, items hpa.InfoList) error {
+	return doInsert[hpa.Info](con, db, Schema, HPATable, items)
 }
 
-func InsertDeployments(con driver.Conn, deployments deployment.InfoList) error {
-	appender, err := duckdb.NewAppenderFromConn(con, Schema, DeploymentsTable)
-	if err != nil {
-		return err
-	}
-
-	for _, item := range deployments {
-		replicas := int32(0)
-		if item.Replicas != nil {
-			replicas = *item.Replicas
-		}
-
-		err := appender.AppendRow(
-			item.Name,
-			item.Namespace,
-			item.CreationTimestamp,
-			mapStringStringToDuckdbMap(item.Labels),
-			replicas,
-		)
-		if err != nil {
-			return err
-		}
-	}
-
-	err = appender.Flush()
-	if err != nil {
-		return err
-	}
-
-	return nil
+func InsertSTS(con driver.Conn, db *sql.DB, items sts.InfoList) error {
+	return doInsert[sts.Info](con, db, Schema, STSTable, items)
 }
 
-func InsertHPAs(con driver.Conn, items hpa.InfoList) error {
-	appender, err := duckdb.NewAppenderFromConn(con, Schema, HPATable)
+func InsertDS(con driver.Conn, db *sql.DB, items ds.InfoList) error {
+	return doInsert[ds.Info](con, db, Schema, DSTable, items)
+}
+
+func doInsert[T any](con driver.Conn, db *sql.DB, schema string, table string, items []*T) error {
+	columnNames, err := listTableColumnNames(db, schema, table)
+	if err != nil {
+		return err
+	}
+
+	columnIndexByName := getColumnIndexByName(columnNames)
+
+	appender, err := duckdb.NewAppenderFromConn(con, schema, table)
 	if err != nil {
 		return err
 	}
 
 	for _, item := range items {
-		err := appender.AppendRow(
-			item.Name,
-			item.Namespace,
-			item.CreationTimestamp,
-			mapStringStringToDuckdbMap(item.Labels),
-			item.CurrentReplicas,
-			item.DesiredReplicas,
-		)
+		rowValues, err := prepareRowValueSlice(*item, columnIndexByName)
+		if err != nil {
+			return err
+		}
+
+		err = appender.AppendRow(rowValues...)
 		if err != nil {
 			return err
 		}
 	}
 
-	err = appender.Flush()
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func InsertSTS(con driver.Conn, items sts.InfoList) error {
-	appender, err := duckdb.NewAppenderFromConn(con, Schema, STSTable)
-	if err != nil {
-		return err
-	}
-
-	for _, item := range items {
-		err := appender.AppendRow(
-			item.Name,
-			item.Namespace,
-			item.CreationTimestamp,
-			mapStringStringToDuckdbMap(item.Labels),
-			item.Replicas,
-		)
-		if err != nil {
-			return err
-		}
-	}
-
-	err = appender.Flush()
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func InsertDS(con driver.Conn, items ds.InfoList) error {
-	appender, err := duckdb.NewAppenderFromConn(con, Schema, DSTable)
-	if err != nil {
-		return err
-	}
-
-	for _, item := range items {
-		err := appender.AppendRow(
-			item.Name,
-			item.Namespace,
-			item.CreationTimestamp,
-			mapStringStringToDuckdbMap(item.Labels),
-			item.CurrentNumberScheduled,
-			item.DesiredNumberScheduled,
-			item.NumberAvailable,
-			item.NumberMisscheduled,
-			item.NumberReady,
-			item.NumberUnavailable,
-		)
-		if err != nil {
-			return err
-		}
-	}
-
-	err = appender.Flush()
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return appender.Flush()
 }
 
 func mapStringStringToDuckdbMap(m map[string]string) duckdb.Map {
@@ -241,4 +104,42 @@ func mapStringStringToDuckdbMap(m map[string]string) duckdb.Map {
 	}
 
 	return dm
+}
+
+func getColumnIndexByName(columns []string) map[string]int {
+	columnIndexByName := make(map[string]int, len(columns))
+	for i, name := range columns {
+		columnIndexByName[name] = i
+	}
+	return columnIndexByName
+}
+
+func prepareRowValueSlice(item any, columnIndexByName map[string]int) ([]driver.Value, error) {
+	values := make([]driver.Value, len(columnIndexByName))
+
+	st := reflect.TypeOf(item)
+	for i := 0; i < st.NumField(); i++ {
+		field := st.Field(i)
+		tagValue := field.Tag.Get("db")
+		if tagValue == "" {
+			continue
+		}
+		fieldValue := reflect.ValueOf(item).Field(i).Interface()
+		columnIndex, ok := columnIndexByName[tagValue]
+		if !ok {
+			return nil, fmt.Errorf("column %s not found", tagValue)
+		}
+
+		switch fieldValueTyped := fieldValue.(type) {
+		case map[string]string:
+			fieldValue = mapStringStringToDuckdbMap(fieldValueTyped)
+		case *int32:
+			fieldValue = *fieldValueTyped
+		default:
+		}
+
+		values[columnIndex] = fieldValue
+	}
+
+	return values, nil
 }

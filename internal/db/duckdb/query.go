@@ -16,13 +16,13 @@ func Query(ctx context.Context, dataDir string, q string) (string, error) {
 		return "", err
 	}
 
-	con, _, err := initConnection(ctx, connector)
+	db, _, err := initConnection(ctx, connector)
 
 	if err != nil {
 		return "", err
 	}
 
-	rows, err := con.QueryContext(ctx, q)
+	rows, err := db.QueryContext(ctx, q)
 	if err != nil {
 		return "", err
 	}

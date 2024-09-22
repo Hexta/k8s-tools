@@ -20,7 +20,7 @@ func Fetch(ctx context.Context, clientset *kubernetes.Clientset) (InfoList, erro
 			Continue: continueToken,
 		})
 		if err != nil {
-			return nil, fmt.Errorf("failed to list pods: %v", err)
+			return nil, fmt.Errorf("failed to list pods: %w", err)
 		}
 
 		for idx := range list.Items {

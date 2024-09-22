@@ -70,12 +70,14 @@ func (r *Info) Fetch(opts FetchOptions) error {
 	return errors.Join(errorList...)
 }
 
-func (r *Info) startFetchFunc(f func() error, wg *sync.WaitGroup, opts FetchOptions, errorCh chan error) {
+func (r *Info) startFetchFunc(f func(ctx context.Context) error, wg *sync.WaitGroup, opts FetchOptions, errorCh chan error) {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		err := retry.Do(r.ctx, newBackoff(opts), func(ctx context.Context) error {
-			return f()
+		b := newBackoff(opts)
+		err := retry.Do(r.ctx, b, func(ctx context.Context) error {
+			err := f(ctx)
+			return retry.RetryableError(err)
 		})
 		errorCh <- err
 	}()
@@ -90,57 +92,57 @@ func newBackoff(opts FetchOptions) retry.Backoff {
 	return b
 }
 
-func (r *Info) fetchPods() error {
+func (r *Info) fetchPods(ctx context.Context) error {
 	log.Debugf("Listing pods - start")
 	defer log.Debugf("Listing pods - done")
 
 	var err error
-	r.Pods, err = k8spod.Fetch(r.ctx, r.clientset)
+	r.Pods, err = k8spod.Fetch(ctx, r.clientset)
 
 	return err
 }
 
-func (r *Info) fetchNodes() error {
+func (r *Info) fetchNodes(ctx context.Context) error {
 	log.Debugf("Listing nodes - start")
 	defer log.Debugf("Listing nodes - done")
 
 	var err error
-	r.Nodes, err = k8snode.Fetch(r.ctx, r.clientset)
+	r.Nodes, err = k8snode.Fetch(ctx, r.clientset)
 	return err
 }
 
-func (r *Info) fetchDeployments() error {
+func (r *Info) fetchDeployments(ctx context.Context) error {
 	log.Debugf("Listing deployments - start")
 	defer log.Debugf("Listing deployments - done")
 
 	var err error
-	r.Deployments, err = deployment.Fetch(r.ctx, r.clientset)
+	r.Deployments, err = deployment.Fetch(ctx, r.clientset)
 	return err
 }
 
-func (r *Info) fetchHPAs() error {
+func (r *Info) fetchHPAs(ctx context.Context) error {
 	log.Debugf("Listing HPAs - start")
 	defer log.Debugf("Listing HPAs - done")
 
 	var err error
-	r.HPAs, err = hpa.Fetch(r.ctx, r.clientset)
+	r.HPAs, err = hpa.Fetch(ctx, r.clientset)
 	return err
 }
 
-func (r *Info) fetchSTSs() error {
+func (r *Info) fetchSTSs(ctx context.Context) error {
 	log.Debugf("Listing STSs - start")
 	defer log.Debugf("Listing STSs - done")
 
 	var err error
-	r.STSs, err = sts.Fetch(r.ctx, r.clientset)
+	r.STSs, err = sts.Fetch(ctx, r.clientset)
 	return err
 }
 
-func (r *Info) fetchDSs() error {
+func (r *Info) fetchDSs(ctx context.Context) error {
 	log.Debugf("Listing DSs - start")
 	defer log.Debugf("Listing DSs - done")
 
 	var err error
-	r.DSs, err = ds.Fetch(r.ctx, r.clientset)
+	r.DSs, err = ds.Fetch(ctx, r.clientset)
 	return err
 }
