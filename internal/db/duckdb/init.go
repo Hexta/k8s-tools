@@ -3,14 +3,12 @@ package duckdb
 import (
 	"context"
 	"database/sql"
-	"database/sql/driver"
 	"embed"
 	"fmt"
 	"os"
 	"path/filepath"
 
 	"github.com/Hexta/k8s-tools/internal/k8s"
-	"github.com/marcboeker/go-duckdb"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -62,56 +60,37 @@ func InitDB(ctx context.Context, dataDir string, k8sInfo *k8s.Info) error {
 		return err
 	}
 
-	functionsToRun := []func(con driver.Conn) error{
-		func(con driver.Conn) error {
-			return InsertNodes(con, k8sInfo.Nodes)
+	functionsToRun := []func() error{
+		func() error {
+			return InsertNodes(con, db, k8sInfo.Nodes)
 		},
-		func(con driver.Conn) error {
-			return InsertPods(con, k8sInfo.Pods)
+		func() error {
+			return InsertPods(con, db, k8sInfo.Pods)
 		},
-		func(con driver.Conn) error {
-			return InsertContainers(con, k8sInfo.Pods)
+		func() error {
+			return InsertContainers(con, db, k8sInfo.Pods)
 		},
-		func(con driver.Conn) error {
-			return InsertDeployments(con, k8sInfo.Deployments)
+		func() error {
+			return InsertDeployments(con, db, k8sInfo.Deployments)
 		},
-		func(con driver.Conn) error {
-			return InsertHPAs(con, k8sInfo.HPAs)
+		func() error {
+			return InsertHPAs(con, db, k8sInfo.HPAs)
 		},
-		func(con driver.Conn) error {
-			return InsertSTS(con, k8sInfo.STSs)
+		func() error {
+			return InsertSTS(con, db, k8sInfo.STSs)
 		},
-		func(con driver.Conn) error {
-			return InsertDS(con, k8sInfo.DSs)
+		func() error {
+			return InsertDS(con, db, k8sInfo.DSs)
 		},
 	}
 
 	for _, fn := range functionsToRun {
-		if err = fn(con); err != nil {
+		if err = fn(); err != nil {
 			return err
 		}
 	}
 
 	return nil
-}
-
-func initConnector(dataDir string) (*duckdb.Connector, error) {
-	dbDir := filepath.Join(dataDir, duckdbDir)
-	dbFile := filepath.Join(dbDir, "duckdb.db")
-
-	return duckdb.NewConnector(dbFile, nil)
-}
-
-func initConnection(ctx context.Context, connector *duckdb.Connector) (db *sql.DB, connect driver.Conn, err error) {
-	connect, err = connector.Connect(ctx)
-	if err != nil {
-		err = fmt.Errorf("failed to connect to DB: %w", err)
-		return
-	}
-
-	db = sql.OpenDB(connector)
-
-	return
 }
 
 func runDDL(ctx context.Context, db *sql.DB) error {

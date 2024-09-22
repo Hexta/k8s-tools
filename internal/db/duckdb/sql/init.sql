@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS k8s.nodes (
 CREATE TABLE IF NOT EXISTS k8s.pods (
     name STRING,
     namespace STRING,
-    node STRING,
+    node_name STRING,
     creation_ts TIMESTAMP,
     labels MAP(STRING, STRING),
     cpu_requests FLOAT,
@@ -27,12 +27,12 @@ CREATE TABLE IF NOT EXISTS k8s.pods (
 CREATE TABLE IF NOT EXISTS k8s.containers (
     name STRING,
     namespace STRING,
-    pod STRING,
+    pod_name STRING,
     cpu_requests FLOAT,
     cpu_limits FLOAT,
     memory_requests FLOAT,
     memory_limits FLOAT,
-    PRIMARY KEY (namespace, pod, name)
+    PRIMARY KEY (namespace, pod_name, name)
 );
 
 CREATE TABLE IF NOT EXISTS k8s.deployments (
