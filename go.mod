@@ -5,7 +5,7 @@ go 1.23.1
 require (
 	github.com/alecthomas/chroma/v2 v2.14.0
 	github.com/charmbracelet/bubbles v0.20.0
-	github.com/charmbracelet/bubbletea v1.1.0
+	github.com/charmbracelet/bubbletea v1.1.1
 	github.com/charmbracelet/lipgloss v0.13.0
 	github.com/marcboeker/go-duckdb v1.7.1
 	github.com/rodaine/table v1.3.0
