@@ -49,5 +49,6 @@ func generateMarkdownDocs() error {
 }
 
 func init() {
+	rootCmd.DisableAutoGenTag = true
 	rootCmd.AddCommand(newDocsCmd())
 }
