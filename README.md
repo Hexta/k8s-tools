@@ -6,10 +6,10 @@ Provides SQL interface for querying information about K8s:
 * Containers
 * DaemonSets
 * Deployments
-* HPA
+* HorizontalPodAutoscalers
 * Nodes
 * Pods
-* STS
+* StatefulSets
 
 ## Getting Started
 

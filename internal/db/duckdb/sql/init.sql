@@ -2,12 +2,24 @@ CREATE SCHEMA IF NOT EXISTS k8s;
 
 CREATE TABLE IF NOT EXISTS k8s.nodes (
     name STRING PRIMARY KEY,
+    labels MAP(STRING, STRING),
+
+    address MAP(STRING, STRING),
+    allocatable_cpu FLOAT,
+    allocatable_memory FLOAT,
+    annotations MAP(STRING, STRING),
+    architecture STRING,
+    capacity_cpu FLOAT,
+    capacity_memory FLOAT,
+    container_runtime_version STRING,
+    cpu_utilisation FLOAT,
     creation_ts TIMESTAMP,
     instance_type STRING,
-    cpu_utilisation FLOAT,
+    kernel_version STRING,
+    kubelet_version STRING,
     memory_utilisation FLOAT,
-    labels MAP(STRING, STRING),
-    address MAP(STRING, STRING)
+    operating_system STRING,
+    os_image STRING
 );
 
 CREATE TABLE IF NOT EXISTS k8s.pods (

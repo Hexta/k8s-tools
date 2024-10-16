@@ -11,9 +11,16 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
+const instanceTypeLabel = "node.kubernetes.io/instance-type"
+
 func Fetch(ctx context.Context, clientset *kubernetes.Clientset) (InfoList, error) {
 	var continueToken string
 	nodes := make(InfoList, 0, 10000)
+
+	podsPerNode, err := listPodsPerNode(ctx, clientset)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list pods per node: %w", err)
+	}
 
 	for {
 		log.Debugf("Listing nodes with continue token %q", continueToken)
@@ -21,35 +28,36 @@ func Fetch(ctx context.Context, clientset *kubernetes.Clientset) (InfoList, erro
 			Continue: continueToken,
 		})
 		if err != nil {
-			return nil, fmt.Errorf("failed to list nodes: %v", err)
-		}
-
-		podsPerNode, err := listPodsPerNode(ctx, clientset)
-
-		if err != nil {
-			return nil, fmt.Errorf("failed to list pods per node: %v", err)
+			return nil, fmt.Errorf("failed to list nodes: %w", err)
 		}
 
 		for idx := range list.Items {
 			node := &list.Items[idx]
-			instanceType := node.GetLabels()["node.kubernetes.io/instance-type"]
+			instanceType := node.GetLabels()[instanceTypeLabel]
 			utilisation := calculateNodeUtilisation(node, podsPerNode)
 
-			addrMap := make(map[string]string, 4)
-
-			for _, address := range node.Status.Addresses {
-				addrMap[string(address.Type)] = address.Address
-			}
+			addrMap := getAddressMap(node.Status.Addresses)
 
 			nodes = append(nodes, &Info{
-				Name:              node.Name,
-				Age:               time.Since(node.CreationTimestamp.Time),
-				CreationTimestamp: node.CreationTimestamp.Time,
-				InstanceType:      instanceType,
-				CPUUtilisation:    utilisation.CPU,
-				MemoryUtilisation: utilisation.Memory,
-				Labels:            node.Labels,
-				Address:           addrMap,
+				Address:                 addrMap,
+				Age:                     time.Since(node.CreationTimestamp.Time),
+				AllocatableCPU:          node.Status.Allocatable.Cpu().AsApproximateFloat64(),
+				AllocatableMemory:       node.Status.Allocatable.Memory().AsApproximateFloat64(),
+				Annotations:             node.Annotations,
+				Architecture:            node.Status.NodeInfo.Architecture,
+				CapacityCPU:             node.Status.Capacity.Cpu().AsApproximateFloat64(),
+				CapacityMemory:          node.Status.Capacity.Memory().AsApproximateFloat64(),
+				ContainerRuntimeVersion: node.Status.NodeInfo.ContainerRuntimeVersion,
+				CPUUtilisation:          utilisation.CPU,
+				CreationTimestamp:       node.CreationTimestamp.Time,
+				InstanceType:            instanceType,
+				KernelVersion:           node.Status.NodeInfo.KernelVersion,
+				KubeletVersion:          node.Status.NodeInfo.KubeletVersion,
+				Labels:                  node.Labels,
+				MemoryUtilisation:       utilisation.Memory,
+				Name:                    node.Name,
+				OperatingSystem:         node.Status.NodeInfo.OperatingSystem,
+				OSImage:                 node.Status.NodeInfo.OSImage,
 			})
 		}
 
@@ -59,6 +67,16 @@ func Fetch(ctx context.Context, clientset *kubernetes.Clientset) (InfoList, erro
 	}
 
 	return nodes, nil
+}
+
+func getAddressMap(addresses []apicorev1.NodeAddress) map[string]string {
+	addrMap := make(map[string]string, 4)
+
+	for _, address := range addresses {
+		addrMap[string(address.Type)] = address.Address
+	}
+
+	return addrMap
 }
 
 func listPodsPerNode(ctx context.Context, clientset *kubernetes.Clientset) (map[string][]*apicorev1.Pod, error) {

@@ -46,7 +46,7 @@ func NewInfo(ctx context.Context, clientset *kubernetes.Clientset) *Info {
 
 func (r *Info) Fetch(opts FetchOptions) error {
 	wg := sync.WaitGroup{}
-	errorCh := make(chan error, 8)
+	errorCh := make(chan error)
 
 	errorList := make([]error, 0, len(errorCh))
 	go func() {
