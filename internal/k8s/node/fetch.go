@@ -37,6 +37,7 @@ func Fetch(ctx context.Context, clientset *kubernetes.Clientset) (InfoList, erro
 			utilisation := calculateNodeUtilisation(node, podsPerNode)
 
 			addrMap := getAddressMap(node.Status.Addresses)
+			taints := getTaints(node.Spec.Taints)
 
 			nodes = append(nodes, &Info{
 				Address:                 addrMap,
@@ -58,6 +59,7 @@ func Fetch(ctx context.Context, clientset *kubernetes.Clientset) (InfoList, erro
 				Name:                    node.Name,
 				OperatingSystem:         node.Status.NodeInfo.OperatingSystem,
 				OSImage:                 node.Status.NodeInfo.OSImage,
+				Taints:                  taints,
 			})
 		}
 
@@ -67,6 +69,20 @@ func Fetch(ctx context.Context, clientset *kubernetes.Clientset) (InfoList, erro
 	}
 
 	return nodes, nil
+}
+
+func getTaints(taints []apicorev1.Taint) []*Taint {
+	taintList := make([]*Taint, 0, len(taints))
+
+	for _, taint := range taints {
+		taintList = append(taintList, &Taint{
+			Effect: string(taint.Effect),
+			Key:    taint.Key,
+			Value:  taint.Value,
+		})
+	}
+
+	return taintList
 }
 
 func getAddressMap(addresses []apicorev1.NodeAddress) map[string]string {

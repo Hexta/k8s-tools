@@ -25,6 +25,7 @@ type Info struct {
 	MemoryUtilisation       float64           `db:"memory_utilisation"`
 	OperatingSystem         string            `db:"operating_system"`
 	OSImage                 string            `db:"os_image"`
+	Taints                  []*Taint
 }
 
 type InfoList []*Info
@@ -33,3 +34,11 @@ type Utilisation struct {
 	CPU    float64
 	Memory float64
 }
+
+type Taint struct {
+	Effect string
+	Key    string
+	Value  string
+}
+
+type TaintList []*Taint
