@@ -65,6 +65,9 @@ func InitDB(ctx context.Context, dataDir string, k8sInfo *k8s.Info) error {
 			return InsertNodes(con, db, k8sInfo.Nodes)
 		},
 		func() error {
+			return InsertNodeTaints(con, db, k8sInfo.NodeTaints)
+		},
+		func() error {
 			return InsertPods(con, db, k8sInfo.Pods)
 		},
 		func() error {

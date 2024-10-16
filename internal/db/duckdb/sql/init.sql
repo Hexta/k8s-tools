@@ -22,6 +22,14 @@ CREATE TABLE IF NOT EXISTS k8s.nodes (
     os_image STRING
 );
 
+CREATE TABLE IF NOT EXISTS k8s.taints (
+    node_name STRING,
+    effect STRING,
+    key STRING,
+    value STRING,
+    PRIMARY KEY (node_name, key, value, effect)
+);
+
 CREATE TABLE IF NOT EXISTS k8s.pods (
     name STRING,
     namespace STRING,

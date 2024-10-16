@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/Hexta/k8s-tools/internal/k8s"
 	"github.com/Hexta/k8s-tools/internal/k8s/container"
 	"github.com/Hexta/k8s-tools/internal/k8s/deployment"
 	_ "github.com/Hexta/k8s-tools/internal/k8s/deployment"
@@ -18,19 +19,24 @@ import (
 )
 
 const (
-	Schema                = "k8s"
-	NodesTable            = "nodes"
-	PodsTable             = "pods"
 	ContainersTable       = "containers"
+	DSTable               = "ds"
 	DeploymentsTable      = "deployments"
 	HPATable              = "hpa"
+	NodesTable            = "nodes"
+	PodsTable             = "pods"
 	STSTable              = "sts"
-	DSTable               = "ds"
+	Schema                = "k8s"
+	TaintsTable           = "taints"
 	containerListCapacity = 65536
 )
 
 func InsertNodes(con driver.Conn, db *sql.DB, items k8snode.InfoList) error {
 	return doInsert[k8snode.Info](con, db, Schema, NodesTable, items)
+}
+
+func InsertNodeTaints(con driver.Conn, db *sql.DB, items k8s.TaintList) error {
+	return doInsert[k8s.Taint](con, db, Schema, TaintsTable, items)
 }
 
 func InsertPods(con driver.Conn, db *sql.DB, items k8spod.InfoList) error {
