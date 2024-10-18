@@ -3,6 +3,7 @@ package main
 import (
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/Hexta/k8s-tools/internal/logutil"
 	"github.com/Hexta/k8s-tools/pkg/version"
@@ -14,9 +15,13 @@ import (
 
 var (
 	globalOptions = struct {
-		Verbose    bool
-		CacheDir   string
-		Kubeconfig string
+		Verbose                 bool
+		CacheDir                string
+		Kubeconfig              string
+		k8sRetryInitialInterval time.Duration
+		k8sRetryJitterPercent   uint64
+		k8sRetryMaxAttempts     uint64
+		k8sRetryMaxInterval     time.Duration
 	}{}
 )
 
@@ -39,6 +44,11 @@ func init() {
 	rootCmd.PersistentFlags().BoolVarP(&globalOptions.Verbose, "verbose", "v", false, "verbose")
 	rootCmd.PersistentFlags().StringVar(&globalOptions.CacheDir, "cache-dir", "", "cache directory")
 	rootCmd.PersistentFlags().StringVar(&globalOptions.Kubeconfig, "kubeconfig", "", "kubeconfig file")
+
+	rootCmd.PersistentFlags().DurationVarP(&globalOptions.k8sRetryInitialInterval, "k8s-retry-initial-interval", "", time.Second, "Initial interval for Kubernetes API retry")
+	rootCmd.PersistentFlags().Uint64VarP(&globalOptions.k8sRetryJitterPercent, "k8s-retry-jitter-percent", "", 50, "Jitter percent for Kubernetes API retry")
+	rootCmd.PersistentFlags().Uint64VarP(&globalOptions.k8sRetryMaxAttempts, "k8s-retry-max-attempts", "", 5, "Maximum number of attempts for Kubernetes API retry")
+	rootCmd.PersistentFlags().DurationVarP(&globalOptions.k8sRetryMaxInterval, "k8s-retry-max-interval", "", 10*time.Second, "Maximum interval between retries for Kubernetes API")
 }
 
 func Execute() {

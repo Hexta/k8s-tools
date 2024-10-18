@@ -3,20 +3,12 @@ package main
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"github.com/Hexta/k8s-tools/internal/db"
 	"github.com/Hexta/k8s-tools/internal/k8s"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
-
-type dbCmdOptions struct {
-	k8sRetryInitialInterval time.Duration
-	k8sRetryJitterPercent   uint64
-	k8sRetryMaxAttempts     uint64
-	k8sRetryMaxInterval     time.Duration
-}
 
 func newDBCmd() *cobra.Command {
 	return &cobra.Command{
@@ -26,8 +18,6 @@ func newDBCmd() *cobra.Command {
 }
 
 func newInitDBCmd() *cobra.Command {
-	cmdOptions := dbCmdOptions{}
-
 	cmd := &cobra.Command{
 		Use:   "init",
 		Short: "Init DB",
@@ -37,10 +27,10 @@ func newInitDBCmd() *cobra.Command {
 
 			k8sInfo := k8s.NewInfo(ctx, clientSet)
 			err := k8sInfo.Fetch(k8s.FetchOptions{
-				RetryInitialInterval: cmdOptions.k8sRetryInitialInterval,
-				RetryJitterPercent:   cmdOptions.k8sRetryJitterPercent,
-				RetryMaxAttempts:     cmdOptions.k8sRetryMaxAttempts,
-				RetryMaxInterval:     cmdOptions.k8sRetryMaxInterval,
+				RetryInitialInterval: globalOptions.k8sRetryInitialInterval,
+				RetryJitterPercent:   globalOptions.k8sRetryJitterPercent,
+				RetryMaxAttempts:     globalOptions.k8sRetryMaxAttempts,
+				RetryMaxInterval:     globalOptions.k8sRetryMaxInterval,
 			})
 			if err != nil {
 				log.Fatalf("Failed to fetch K8s info: %v", err)
@@ -53,10 +43,6 @@ func newInitDBCmd() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().DurationVarP(&cmdOptions.k8sRetryInitialInterval, "k8s-retry-initial-interval", "", time.Second, "Initial interval for Kubernetes API retry")
-	cmd.Flags().Uint64VarP(&cmdOptions.k8sRetryJitterPercent, "k8s-retry-jitter-percent", "", 50, "Jitter percent for Kubernetes API retry")
-	cmd.Flags().Uint64VarP(&cmdOptions.k8sRetryMaxAttempts, "k8s-retry-max-attempts", "", 5, "Maximum number of attempts for Kubernetes API retry")
-	cmd.Flags().DurationVarP(&cmdOptions.k8sRetryMaxInterval, "k8s-retry-max-interval", "", 10*time.Second, "Maximum interval between retries for Kubernetes API")
 	return cmd
 }
 
