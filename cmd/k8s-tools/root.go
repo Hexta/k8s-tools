@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/Hexta/k8s-tools/internal/format"
 	"github.com/Hexta/k8s-tools/internal/logutil"
 	"github.com/Hexta/k8s-tools/pkg/version"
 	"k8s.io/client-go/util/homedir"
@@ -13,16 +14,21 @@ import (
 	"github.com/spf13/cobra"
 )
 
+type FormatType string
+
 var (
 	globalOptions = struct {
-		Verbose                 bool
 		CacheDir                string
+		Format                  format.Format
 		Kubeconfig              string
+		Verbose                 bool
 		k8sRetryInitialInterval time.Duration
 		k8sRetryJitterPercent   uint64
 		k8sRetryMaxAttempts     uint64
 		k8sRetryMaxInterval     time.Duration
-	}{}
+	}{
+		Format: format.TableFormat,
+	}
 )
 
 var rootCmd = &cobra.Command{
@@ -49,6 +55,14 @@ func init() {
 	rootCmd.PersistentFlags().Uint64VarP(&globalOptions.k8sRetryJitterPercent, "k8s-retry-jitter-percent", "", 50, "Jitter percent for Kubernetes API retry")
 	rootCmd.PersistentFlags().Uint64VarP(&globalOptions.k8sRetryMaxAttempts, "k8s-retry-max-attempts", "", 5, "Maximum number of attempts for Kubernetes API retry")
 	rootCmd.PersistentFlags().DurationVarP(&globalOptions.k8sRetryMaxInterval, "k8s-retry-max-interval", "", 10*time.Second, "Maximum interval between retries for Kubernetes API")
+
+	rootCmd.PersistentFlags().VarP(&globalOptions.Format, "format", "f", "output format (table)")
+	err := rootCmd.RegisterFlagCompletionFunc("format", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+		return []string{format.JSONFormat, format.JSONFormat}, cobra.ShellCompDirectiveNoFileComp
+	})
+	if err != nil {
+		log.Fatalf("error registering flag completion: %v", err)
+	}
 }
 
 func Execute() {

@@ -7,6 +7,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/Hexta/k8s-tools/internal/format"
 	"github.com/alecthomas/chroma/v2/quick"
 	"github.com/charmbracelet/bubbles/textarea"
 	"github.com/charmbracelet/bubbles/viewport"
@@ -120,7 +121,7 @@ func (m model) handleKeyEnter() string {
 		return fmt.Sprintf("ERROR: %v", err)
 	}
 
-	return result
+	return format.Table(result)
 }
 
 func (m model) View() string {

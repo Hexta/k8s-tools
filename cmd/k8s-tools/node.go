@@ -1,8 +1,6 @@
 package main
 
 import (
-	"context"
-
 	"github.com/Hexta/k8s-tools/internal/k8s"
 	"github.com/Hexta/k8s-tools/internal/k8s/fetch"
 	"github.com/Hexta/k8s-tools/internal/k8s/node"
@@ -23,7 +21,7 @@ var nodeUtilisationCmd = &cobra.Command{
 	Use:   "utilisation",
 	Short: "Analyze the node utilisation",
 	Run: func(cmd *cobra.Command, args []string) {
-		ctx := context.Background()
+		ctx := cmd.Context()
 		clientSet := k8s.GetClientSet(getKubeconfig())
 
 		k8sInfo := k8s.NewInfo(ctx, clientSet)

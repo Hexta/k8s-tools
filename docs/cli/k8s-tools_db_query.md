@@ -3,7 +3,13 @@
 Query DB
 
 ```
-k8s-tools db query [flags]
+k8s-tools db query QUERY [flags]
+```
+
+### Examples
+
+```
+query "SELECT * FROM k8s.nodes LIMIT 10"
 ```
 
 ### Options
@@ -16,6 +22,7 @@ k8s-tools db query [flags]
 
 ```
       --cache-dir string                      cache directory
+  -f, --format Format                         output format (table) (default table)
       --k8s-retry-initial-interval duration   Initial interval for Kubernetes API retry (default 1s)
       --k8s-retry-jitter-percent uint         Jitter percent for Kubernetes API retry (default 50)
       --k8s-retry-max-attempts uint           Maximum number of attempts for Kubernetes API retry (default 5)

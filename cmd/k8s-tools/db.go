@@ -1,10 +1,10 @@
 package main
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/Hexta/k8s-tools/internal/db"
+	"github.com/Hexta/k8s-tools/internal/format"
 	"github.com/Hexta/k8s-tools/internal/k8s"
 	"github.com/Hexta/k8s-tools/internal/k8s/fetch"
 	log "github.com/sirupsen/logrus"
@@ -23,7 +23,7 @@ func newInitDBCmd() *cobra.Command {
 		Use:   "init",
 		Short: "Init DB",
 		Run: func(cmd *cobra.Command, args []string) {
-			ctx := context.Background()
+			ctx := cmd.Context()
 			clientSet := k8s.GetClientSet(getKubeconfig())
 
 			k8sInfo := k8s.NewInfo(ctx, clientSet)
@@ -49,17 +49,30 @@ func newInitDBCmd() *cobra.Command {
 
 func newQueryDBCmd() *cobra.Command {
 	return &cobra.Command{
-		Use:   "query",
-		Short: "Query DB",
+		Use:     "query QUERY",
+		Short:   "Query DB",
+		Args:    cobra.ExactArgs(1),
+		Example: `query "SELECT * FROM k8s.nodes LIMIT 10"`,
 		Run: func(cmd *cobra.Command, args []string) {
-			ctx := context.Background()
-			result, err := db.Query(ctx, getCacheDir(), args[0])
+			ctx := cmd.Context()
+			data, err := db.Query(ctx, getCacheDir(), args[0])
+
+			output := ""
+
+			switch globalOptions.Format {
+			case format.TableFormat:
+				output = format.Table(data)
+			case format.JSONFormat:
+				output = format.JSON(data)
+			default:
+				log.Fatalf("Unsupported format: %s", globalOptions.Format)
+			}
 
 			if err != nil {
 				log.Fatalf("Failed to query DB: %v", err)
 			}
 
-			fmt.Print(result)
+			fmt.Println(output)
 		},
 	}
 }
@@ -69,7 +82,7 @@ func newTUIDBCmd() *cobra.Command {
 		Use:   "tui",
 		Short: "TUI for DB",
 		Run: func(cmd *cobra.Command, args []string) {
-			ctx := context.Background()
+			ctx := cmd.Context()
 			db.RunTUI(ctx, getCacheDir())
 		},
 	}
