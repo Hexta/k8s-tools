@@ -19,10 +19,15 @@ var nodeUtilisationCmd = &cobra.Command{
 	Short: "Analyze the node utilisation",
 	Run: func(cmd *cobra.Command, args []string) {
 		ctx := context.Background()
-		clientSet := k8s.GetClientSet(getCacheDir())
+		clientSet := k8s.GetClientSet(getKubeconfig())
 
 		k8sInfo := k8s.NewInfo(ctx, clientSet)
-		err := k8sInfo.Fetch(k8s.FetchOptions{})
+		err := k8sInfo.Fetch(k8s.FetchOptions{
+			RetryInitialInterval: globalOptions.k8sRetryInitialInterval,
+			RetryJitterPercent:   globalOptions.k8sRetryJitterPercent,
+			RetryMaxAttempts:     globalOptions.k8sRetryMaxAttempts,
+			RetryMaxInterval:     globalOptions.k8sRetryMaxInterval,
+		})
 		if err != nil {
 			log.Fatalf("Failed to fetch k8s info: %v", err)
 		}
