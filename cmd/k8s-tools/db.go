@@ -6,6 +6,7 @@ import (
 
 	"github.com/Hexta/k8s-tools/internal/db"
 	"github.com/Hexta/k8s-tools/internal/k8s"
+	"github.com/Hexta/k8s-tools/internal/k8s/fetch"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
@@ -26,7 +27,7 @@ func newInitDBCmd() *cobra.Command {
 			clientSet := k8s.GetClientSet(getKubeconfig())
 
 			k8sInfo := k8s.NewInfo(ctx, clientSet)
-			err := k8sInfo.Fetch(k8s.FetchOptions{
+			err := k8sInfo.Fetch(fetch.Options{
 				RetryInitialInterval: globalOptions.k8sRetryInitialInterval,
 				RetryJitterPercent:   globalOptions.k8sRetryJitterPercent,
 				RetryMaxAttempts:     globalOptions.k8sRetryMaxAttempts,

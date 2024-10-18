@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/Hexta/k8s-tools/internal/k8s"
+	"github.com/Hexta/k8s-tools/internal/k8s/fetch"
 	"github.com/Hexta/k8s-tools/internal/k8s/node"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -14,6 +15,10 @@ var nodeCmd = &cobra.Command{
 	Short: "K8s node tools",
 }
 
+var nodeCmdOpts = struct {
+	LabelSelector string
+}{}
+
 var nodeUtilisationCmd = &cobra.Command{
 	Use:   "utilisation",
 	Short: "Analyze the node utilisation",
@@ -22,7 +27,8 @@ var nodeUtilisationCmd = &cobra.Command{
 		clientSet := k8s.GetClientSet(getKubeconfig())
 
 		k8sInfo := k8s.NewInfo(ctx, clientSet)
-		err := k8sInfo.Fetch(k8s.FetchOptions{
+		err := k8sInfo.Fetch(fetch.Options{
+			LabelSelector:        nodeCmdOpts.LabelSelector,
 			RetryInitialInterval: globalOptions.k8sRetryInitialInterval,
 			RetryJitterPercent:   globalOptions.k8sRetryJitterPercent,
 			RetryMaxAttempts:     globalOptions.k8sRetryMaxAttempts,
@@ -36,12 +42,8 @@ var nodeUtilisationCmd = &cobra.Command{
 	},
 }
 
-var (
-	labelSelector string
-)
-
 func init() {
-	nodeUtilisationCmd.Flags().StringVarP(&labelSelector, "label-selector", "l", "", "label selector")
+	nodeUtilisationCmd.Flags().StringVarP(&nodeCmdOpts.LabelSelector, "label-selector", "l", "", "label selector")
 
 	nodeCmd.AddCommand(nodeUtilisationCmd)
 	rootCmd.AddCommand(nodeCmd)
