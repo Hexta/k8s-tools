@@ -9,6 +9,7 @@ import (
 	"github.com/Hexta/k8s-tools/internal/k8s/container"
 	"github.com/Hexta/k8s-tools/internal/k8s/deployment"
 	"github.com/Hexta/k8s-tools/internal/k8s/ds"
+	"github.com/Hexta/k8s-tools/internal/k8s/fetch"
 	"github.com/Hexta/k8s-tools/internal/k8s/hpa"
 	k8snode "github.com/Hexta/k8s-tools/internal/k8s/node"
 	k8spod "github.com/Hexta/k8s-tools/internal/k8s/pod"
@@ -41,13 +42,6 @@ type Taint struct {
 
 type TaintList []*Taint
 
-type FetchOptions struct {
-	RetryInitialInterval time.Duration
-	RetryJitterPercent   uint64
-	RetryMaxAttempts     uint64
-	RetryMaxInterval     time.Duration
-}
-
 func NewInfo(ctx context.Context, clientset *kubernetes.Clientset) *Info {
 	return &Info{
 		ctx:       ctx,
@@ -55,7 +49,7 @@ func NewInfo(ctx context.Context, clientset *kubernetes.Clientset) *Info {
 	}
 }
 
-func (r *Info) Fetch(opts FetchOptions) error {
+func (r *Info) Fetch(opts fetch.Options) error {
 	wg := sync.WaitGroup{}
 	errorCh := make(chan error)
 
@@ -81,7 +75,7 @@ func (r *Info) Fetch(opts FetchOptions) error {
 	return errors.Join(errorList...)
 }
 
-func (r *Info) startFetchFunc(f func(ctx context.Context) error, name string, wg *sync.WaitGroup, opts FetchOptions, errorCh chan error) {
+func (r *Info) startFetchFunc(f func(ctx context.Context, opts fetch.Options) error, name string, wg *sync.WaitGroup, opts fetch.Options, errorCh chan error) {
 	wg.Add(1)
 	go func() {
 		start := time.Now()
@@ -92,14 +86,14 @@ func (r *Info) startFetchFunc(f func(ctx context.Context) error, name string, wg
 		log.Debugf("Fetching %s - start", name)
 		b := newBackoff(opts)
 		err := retry.Do(r.ctx, b, func(ctx context.Context) error {
-			err := f(ctx)
+			err := f(ctx, opts)
 			return retry.RetryableError(err)
 		})
 		errorCh <- err
 	}()
 }
 
-func newBackoff(opts FetchOptions) retry.Backoff {
+func newBackoff(opts fetch.Options) retry.Backoff {
 	b := retry.NewFibonacci(opts.RetryInitialInterval)
 	b = retry.WithJitterPercent(opts.RetryJitterPercent, b)
 	b = retry.WithMaxRetries(opts.RetryMaxAttempts, b)
@@ -108,39 +102,39 @@ func newBackoff(opts FetchOptions) retry.Backoff {
 	return b
 }
 
-func (r *Info) fetchPods(ctx context.Context) error {
+func (r *Info) fetchPods(ctx context.Context, _ fetch.Options) error {
 	var err error
 	r.Pods, err = k8spod.Fetch(ctx, r.clientset)
 
 	return err
 }
 
-func (r *Info) fetchNodes(ctx context.Context) error {
+func (r *Info) fetchNodes(ctx context.Context, opts fetch.Options) error {
 	var err error
-	r.Nodes, err = k8snode.Fetch(ctx, r.clientset)
+	r.Nodes, err = k8snode.Fetch(ctx, r.clientset, opts)
 	r.NodeTaints = nodesToTaints(r.Nodes)
 	return err
 }
 
-func (r *Info) fetchDeployments(ctx context.Context) error {
+func (r *Info) fetchDeployments(ctx context.Context, _ fetch.Options) error {
 	var err error
 	r.Deployments, err = deployment.Fetch(ctx, r.clientset)
 	return err
 }
 
-func (r *Info) fetchHPAs(ctx context.Context) error {
+func (r *Info) fetchHPAs(ctx context.Context, _ fetch.Options) error {
 	var err error
 	r.HPAs, err = hpa.Fetch(ctx, r.clientset)
 	return err
 }
 
-func (r *Info) fetchSTSs(ctx context.Context) error {
+func (r *Info) fetchSTSs(ctx context.Context, _ fetch.Options) error {
 	var err error
 	r.STSs, err = sts.Fetch(ctx, r.clientset)
 	return err
 }
 
-func (r *Info) fetchDSs(ctx context.Context) error {
+func (r *Info) fetchDSs(ctx context.Context, _ fetch.Options) error {
 	var err error
 	r.DSs, err = ds.Fetch(ctx, r.clientset)
 	return err

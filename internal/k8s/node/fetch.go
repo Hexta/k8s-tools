@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/Hexta/k8s-tools/internal/k8s/fetch"
 	log "github.com/sirupsen/logrus"
 	apicorev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -13,7 +14,7 @@ import (
 
 const instanceTypeLabel = "node.kubernetes.io/instance-type"
 
-func Fetch(ctx context.Context, clientset *kubernetes.Clientset) (InfoList, error) {
+func Fetch(ctx context.Context, clientset *kubernetes.Clientset, opts fetch.Options) (InfoList, error) {
 	var continueToken string
 	nodes := make(InfoList, 0, 10000)
 
@@ -25,7 +26,8 @@ func Fetch(ctx context.Context, clientset *kubernetes.Clientset) (InfoList, erro
 	for {
 		log.Debugf("Listing nodes with continue token %q", continueToken)
 		list, err := clientset.CoreV1().Nodes().List(ctx, v1.ListOptions{
-			Continue: continueToken,
+			Continue:      continueToken,
+			LabelSelector: opts.LabelSelector,
 		})
 		if err != nil {
 			return nil, fmt.Errorf("failed to list nodes: %w", err)

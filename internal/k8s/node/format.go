@@ -19,7 +19,7 @@ func FormatNodeInfo(nodes InfoList) {
 			fmt.Sprintf("%.3f", node.CPUUtilisation),
 			fmt.Sprintf("%.3f", node.MemoryUtilisation),
 			fmt.Sprintf("%v", node.InstanceType),
-			node.Age.Truncate(time.Hour),
+			node.Age.Round(time.Second),
 		)
 	}
 
