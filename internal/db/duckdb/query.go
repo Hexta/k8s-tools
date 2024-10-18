@@ -1,30 +1,30 @@
 package duckdb
 
 import (
-	"bytes"
 	"context"
 	"database/sql"
 	"fmt"
 
-	"github.com/rodaine/table"
+	"github.com/Hexta/k8s-tools/internal/format"
 	log "github.com/sirupsen/logrus"
 )
 
-func Query(ctx context.Context, dataDir string, q string) (string, error) {
+func Query(ctx context.Context, dataDir string, q string) (*format.Data, error) {
 	connector, err := initConnector(dataDir)
+
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	db, _, err := initConnection(ctx, connector)
 
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	rows, err := db.QueryContext(ctx, q)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	defer func(rows *sql.Rows) {
 		err := rows.Close()
@@ -35,37 +35,32 @@ func Query(ctx context.Context, dataDir string, q string) (string, error) {
 
 	columnNames, err := rows.Columns()
 	if err != nil {
-		return "", fmt.Errorf("failed to get columns: %w", err)
+		return nil, fmt.Errorf("failed to get columns: %w", err)
 	}
 
-	var buf bytes.Buffer
-
-	columnNamesInterface := make([]interface{}, len(columnNames))
-	for i, name := range columnNames {
-		columnNamesInterface[i] = name
+	output := format.NewData()
+	for _, name := range columnNames {
+		output.AddColumn(name)
 	}
 
-	tbl := table.New(columnNamesInterface...).WithWriter(&buf)
 	cr, err := newColumnsReader(rows)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	for rows.Next() {
 		columns, err := cr.ReadColumns()
 		if err != nil {
-			return "", err
+			return nil, err
 		}
-		tbl.AddRow(columns...)
+		output.AddRow(columns)
 	}
 
 	if err := rows.Err(); err != nil {
-		return "", err
+		return nil, err
 	}
 
-	tbl.Print()
-
-	return buf.String(), nil
+	return output, nil
 }
 
 type columnsReader struct {
