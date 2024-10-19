@@ -65,13 +65,16 @@ func InitDB(ctx context.Context, dataDir string, k8sInfo *k8s.Info) error {
 			return InsertNodes(con, db, k8sInfo.Nodes)
 		},
 		func() error {
-			return InsertNodeTaints(con, db, k8sInfo.NodeTaints)
+			return InsertTaints(con, db, k8sInfo.Taints)
 		},
 		func() error {
 			return InsertPods(con, db, k8sInfo.Pods)
 		},
 		func() error {
 			return InsertContainers(con, db, k8sInfo.Pods)
+		},
+		func() error {
+			return InsertInitContainers(con, db, k8sInfo.Pods)
 		},
 		func() error {
 			return InsertDeployments(con, db, k8sInfo.Deployments)
@@ -87,6 +90,9 @@ func InitDB(ctx context.Context, dataDir string, k8sInfo *k8s.Info) error {
 		},
 		func() error {
 			return InsertServices(con, db, k8sInfo.Services)
+		},
+		func() error {
+			return InsertTolerations(con, db, k8sInfo.Tolerations)
 		},
 	}
 

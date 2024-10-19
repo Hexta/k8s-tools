@@ -3,8 +3,7 @@ package format
 import (
 	"fmt"
 	"strings"
-
-	"github.com/rodaine/table"
+	"text/tabwriter"
 )
 
 func Vertical(input *Data) string {
@@ -14,14 +13,14 @@ func Vertical(input *Data) string {
 	var sb strings.Builder
 
 	for i, row := range rows {
-		_, _ = fmt.Fprintf(&sb, "Row %d:\n%s\n", i, strings.Repeat("-", 7))
-		tbl := table.New("", "").WithWriter(&sb).WithPrintHeaders(false)
+		_, _ = fmt.Fprintf(&sb, "Row %d:\n%s\n", i+1, strings.Repeat("-", 7))
+		tw := tabwriter.NewWriter(&sb, 0, 0, 1, ' ', 0)
 
 		for j, col := range row {
-			tbl.AddRow(colNames[j], col)
+			_, _ = fmt.Fprintf(tw, "%s\t%v\n", colNames[j], col)
 		}
 
-		tbl.Print()
+		_ = tw.Flush()
 		sb.WriteString("\n")
 	}
 
