@@ -56,9 +56,11 @@ func init() {
 	rootCmd.PersistentFlags().Uint64VarP(&globalOptions.k8sRetryMaxAttempts, "k8s-retry-max-attempts", "", 5, "Maximum number of attempts for Kubernetes API retry")
 	rootCmd.PersistentFlags().DurationVarP(&globalOptions.k8sRetryMaxInterval, "k8s-retry-max-interval", "", 10*time.Second, "Maximum interval between retries for Kubernetes API")
 
-	rootCmd.PersistentFlags().VarP(&globalOptions.Format, "format", "f", "output format (table)")
-	err := rootCmd.RegisterFlagCompletionFunc("format", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
-		return []string{format.JSONFormat, format.JSONFormat}, cobra.ShellCompDirectiveNoFileComp
+	rootCmd.PersistentFlags().VarP(&globalOptions.Format, "output", "o", "output format (json, table, vertical)")
+	err := rootCmd.RegisterFlagCompletionFunc("output", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+		return []string{
+			format.JSONFormat, format.TableFormat, format.VerticalFormat,
+		}, cobra.ShellCompDirectiveNoFileComp
 	})
 	if err != nil {
 		log.Fatalf("error registering flag completion: %v", err)
