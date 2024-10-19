@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/Hexta/k8s-tools/internal/k8s/container"
-	log "github.com/sirupsen/logrus"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 )
@@ -15,7 +14,6 @@ func Fetch(ctx context.Context, clientset *kubernetes.Clientset) (InfoList, erro
 	pods := make(InfoList, 0, 10000)
 
 	for {
-		log.Debugf("Listing pods with continue token %q", continueToken)
 		list, err := clientset.CoreV1().Pods(v1.NamespaceAll).List(ctx, v1.ListOptions{
 			Continue: continueToken,
 		})

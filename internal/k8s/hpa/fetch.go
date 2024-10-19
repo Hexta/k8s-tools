@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	log "github.com/sirupsen/logrus"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 )
@@ -14,7 +13,6 @@ func Fetch(ctx context.Context, clientset *kubernetes.Clientset) (InfoList, erro
 	infoList := make(InfoList, 0, 10000)
 
 	for {
-		log.Debugf("Listing HPAs with continue token %q", continueToken)
 		list, err := clientset.AutoscalingV2().HorizontalPodAutoscalers(v1.NamespaceAll).List(ctx, v1.ListOptions{
 			Continue: continueToken,
 		})

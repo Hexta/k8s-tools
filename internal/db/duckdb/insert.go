@@ -5,6 +5,7 @@ import (
 	"database/sql/driver"
 	"fmt"
 	"reflect"
+	"slices"
 
 	"github.com/Hexta/k8s-tools/internal/k8s"
 	"github.com/Hexta/k8s-tools/internal/k8s/container"
@@ -14,20 +15,26 @@ import (
 	"github.com/Hexta/k8s-tools/internal/k8s/hpa"
 	k8snode "github.com/Hexta/k8s-tools/internal/k8s/node"
 	k8spod "github.com/Hexta/k8s-tools/internal/k8s/pod"
+	"github.com/Hexta/k8s-tools/internal/k8s/service"
 	"github.com/Hexta/k8s-tools/internal/k8s/sts"
 	"github.com/marcboeker/go-duckdb"
 )
 
+// Table names
 const (
-	ContainersTable       = "containers"
-	DSTable               = "ds"
-	DeploymentsTable      = "deployments"
-	HPATable              = "hpa"
-	NodesTable            = "nodes"
-	PodsTable             = "pods"
-	STSTable              = "sts"
-	Schema                = "k8s"
-	TaintsTable           = "taints"
+	ContainersTable  = "containers"
+	DSTable          = "ds"
+	DeploymentsTable = "deployments"
+	HPATable         = "hpa"
+	NodesTable       = "nodes"
+	PodsTable        = "pods"
+	STSTable         = "sts"
+	Schema           = "k8s"
+	ServiceTable     = "services"
+	TaintsTable      = "taints"
+)
+
+const (
 	containerListCapacity = 65536
 )
 
@@ -70,8 +77,12 @@ func InsertSTS(con driver.Conn, db *sql.DB, items sts.InfoList) error {
 	return doInsert[sts.Info](con, db, Schema, STSTable, items)
 }
 
-func InsertDS(con driver.Conn, db *sql.DB, items ds.InfoList) error {
+func InsertDSs(con driver.Conn, db *sql.DB, items ds.InfoList) error {
 	return doInsert[ds.Info](con, db, Schema, DSTable, items)
+}
+
+func InsertServices(con driver.Conn, db *sql.DB, items service.InfoList) error {
+	return doInsert[service.Info](con, db, Schema, ServiceTable, items)
 }
 
 func doInsert[T any](con driver.Conn, db *sql.DB, schema string, table string, items []*T) error {
@@ -130,21 +141,39 @@ func prepareRowValueSlice(item any, columnIndexByName map[string]int) ([]driver.
 		if tagValue == "" {
 			continue
 		}
-		fieldValue := reflect.ValueOf(item).Field(i).Interface()
+
+		fieldValue := reflect.ValueOf(item).Field(i)
+
+		fieldValueInterface := reflect.ValueOf(item).Field(i).Interface()
 		columnIndex, ok := columnIndexByName[tagValue]
 		if !ok {
 			return nil, fmt.Errorf("column %s not found", tagValue)
 		}
 
-		switch fieldValueTyped := fieldValue.(type) {
+		switch fieldValueTyped := fieldValueInterface.(type) {
 		case map[string]string:
-			fieldValue = mapStringStringToDuckdbMap(fieldValueTyped)
+			fieldValueInterface = mapStringStringToDuckdbMap(fieldValueTyped)
 		case *int32:
-			fieldValue = *fieldValueTyped
+			if fieldValueTyped == nil {
+				fieldValueInterface = int32(0)
+			} else {
+				fieldValueInterface = *fieldValueTyped
+			}
+		case *string:
+			if fieldValueTyped == nil {
+				fieldValueInterface = ""
+			} else {
+				fieldValueInterface = *fieldValueTyped
+			}
 		default:
+			if !slices.Contains([]string{"", "time"}, fieldValue.Type().PkgPath()) {
+				if ok = fieldValue.CanConvert(reflect.TypeOf("")); ok {
+					fieldValueInterface = fieldValue.Convert(reflect.TypeOf("")).Interface()
+				}
+			}
 		}
 
-		values[columnIndex] = fieldValue
+		values[columnIndex] = fieldValueInterface
 	}
 
 	return values, nil

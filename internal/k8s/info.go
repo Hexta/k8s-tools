@@ -13,6 +13,7 @@ import (
 	"github.com/Hexta/k8s-tools/internal/k8s/hpa"
 	k8snode "github.com/Hexta/k8s-tools/internal/k8s/node"
 	k8spod "github.com/Hexta/k8s-tools/internal/k8s/pod"
+	k8sservice "github.com/Hexta/k8s-tools/internal/k8s/service"
 	"github.com/Hexta/k8s-tools/internal/k8s/sts"
 	"github.com/sethvargo/go-retry"
 	log "github.com/sirupsen/logrus"
@@ -27,6 +28,7 @@ type Info struct {
 	NodeTaints  TaintList
 	Nodes       k8snode.InfoList
 	Pods        k8spod.InfoList
+	Services    k8sservice.InfoList
 	STSs        sts.InfoList
 	Taints      k8snode.TaintList
 	ctx         context.Context
@@ -62,15 +64,21 @@ func (r *Info) Fetch(opts fetch.Options) error {
 		}
 	}()
 
+	start := time.Now()
+	log.Debug("Fetching K8s info")
+
 	r.startFetchFunc(r.fetchPods, "Pods", &wg, opts, errorCh)
 	r.startFetchFunc(r.fetchNodes, "Nodes", &wg, opts, errorCh)
 	r.startFetchFunc(r.fetchDeployments, "Deployments", &wg, opts, errorCh)
 	r.startFetchFunc(r.fetchHPAs, "HPAs", &wg, opts, errorCh)
 	r.startFetchFunc(r.fetchSTSs, "STSs", &wg, opts, errorCh)
 	r.startFetchFunc(r.fetchDSs, "DSs", &wg, opts, errorCh)
+	r.startFetchFunc(r.fetchServices, "Services", &wg, opts, errorCh)
 
 	wg.Wait()
 	close(errorCh)
+
+	log.Debug("Fetching K8s info: done, elapsed: ", time.Since(start))
 
 	return errors.Join(errorList...)
 }
@@ -80,10 +88,10 @@ func (r *Info) startFetchFunc(f func(ctx context.Context, opts fetch.Options) er
 	go func() {
 		start := time.Now()
 		defer func() {
-			log.Debugf("Fetching %s - done, elapsed: %v", name, time.Since(start))
+			log.Debugf("Fetching %s: done, elapsed: %v", name, time.Since(start))
 			wg.Done()
 		}()
-		log.Debugf("Fetching %s - start", name)
+		log.Debugf("Fetching %s", name)
 		b := newBackoff(opts)
 		err := retry.Do(r.ctx, b, func(ctx context.Context) error {
 			err := f(ctx, opts)
@@ -137,6 +145,12 @@ func (r *Info) fetchSTSs(ctx context.Context, _ fetch.Options) error {
 func (r *Info) fetchDSs(ctx context.Context, _ fetch.Options) error {
 	var err error
 	r.DSs, err = ds.Fetch(ctx, r.clientset)
+	return err
+}
+
+func (r *Info) fetchServices(ctx context.Context, _ fetch.Options) error {
+	var err error
+	r.Services, err = k8sservice.Fetch(ctx, r.clientset)
 	return err
 }
 

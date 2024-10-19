@@ -9,6 +9,7 @@ Provides SQL interface for querying information about K8s:
 * HorizontalPodAutoscalers
 * Nodes
 * Pods
+* Services
 * StatefulSets
 
 ## Getting Started
