@@ -22,16 +22,18 @@ import (
 
 // Table names
 const (
-	ContainersTable  = "containers"
-	DSTable          = "ds"
-	DeploymentsTable = "deployments"
-	HPATable         = "hpa"
-	NodesTable       = "nodes"
-	PodsTable        = "pods"
-	STSTable         = "sts"
-	Schema           = "k8s"
-	ServiceTable     = "services"
-	TaintsTable      = "taints"
+	ContainersTable     = "containers"
+	DSTable             = "ds"
+	DeploymentsTable    = "deployments"
+	HPATable            = "hpa"
+	InitContainersTable = "init_containers"
+	NodesTable          = "nodes"
+	PodsTable           = "pods"
+	STSTable            = "sts"
+	Schema              = "k8s"
+	ServiceTable        = "services"
+	TaintsTable         = "taints"
+	TolerationsTable    = "tolerations"
 )
 
 const (
@@ -42,8 +44,12 @@ func InsertNodes(con driver.Conn, db *sql.DB, items k8snode.InfoList) error {
 	return doInsert[k8snode.Info](con, db, Schema, NodesTable, items)
 }
 
-func InsertNodeTaints(con driver.Conn, db *sql.DB, items k8s.TaintList) error {
+func InsertTaints(con driver.Conn, db *sql.DB, items k8s.TaintList) error {
 	return doInsert[k8s.Taint](con, db, Schema, TaintsTable, items)
+}
+
+func InsertTolerations(con driver.Conn, db *sql.DB, items k8s.TolerationList) error {
+	return doInsert[k8s.Toleration](con, db, Schema, TolerationsTable, items)
 }
 
 func InsertPods(con driver.Conn, db *sql.DB, items k8spod.InfoList) error {
@@ -58,6 +64,21 @@ func InsertContainers(con driver.Conn, db *sql.DB, items k8spod.InfoList) error 
 	}
 
 	err := doInsert[container.Info](con, db, Schema, ContainersTable, containers)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func InsertInitContainers(con driver.Conn, db *sql.DB, items k8spod.InfoList) error {
+	containers := make(container.InfoList, 0, containerListCapacity)
+
+	for _, pod := range items {
+		containers = append(containers, pod.InitContainers...)
+	}
+
+	err := doInsert[container.Info](con, db, Schema, InitContainersTable, containers)
 	if err != nil {
 		return err
 	}
@@ -143,8 +164,8 @@ func prepareRowValueSlice(item any, columnIndexByName map[string]int) ([]driver.
 		}
 
 		fieldValue := reflect.ValueOf(item).Field(i)
+		fieldValueInterface := fieldValue.Interface()
 
-		fieldValueInterface := reflect.ValueOf(item).Field(i).Interface()
 		columnIndex, ok := columnIndexByName[tagValue]
 		if !ok {
 			return nil, fmt.Errorf("column %s not found", tagValue)
@@ -153,11 +174,18 @@ func prepareRowValueSlice(item any, columnIndexByName map[string]int) ([]driver.
 		switch fieldValueTyped := fieldValueInterface.(type) {
 		case map[string]string:
 			fieldValueInterface = mapStringStringToDuckdbMap(fieldValueTyped)
-		case *int32:
+		case *bool:
 			if fieldValueTyped == nil {
-				fieldValueInterface = int32(0)
+				fieldValueInterface = false
 			} else {
 				fieldValueInterface = *fieldValueTyped
+			}
+		case *int64, *int32:
+			if fieldValue.IsNil() {
+				fieldValueInterface = 0
+			} else {
+				elem := fieldValue.Elem()
+				fieldValueInterface = elem.Interface()
 			}
 		case *string:
 			if fieldValueTyped == nil {

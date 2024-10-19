@@ -25,12 +25,12 @@ type Info struct {
 	DSs         ds.InfoList
 	Deployments deployment.InfoList
 	HPAs        hpa.InfoList
-	NodeTaints  TaintList
 	Nodes       k8snode.InfoList
 	Pods        k8spod.InfoList
 	Services    k8sservice.InfoList
 	STSs        sts.InfoList
-	Taints      k8snode.TaintList
+	Taints      TaintList
+	Tolerations TolerationList
 	ctx         context.Context
 	clientset   *kubernetes.Clientset
 }
@@ -43,6 +43,17 @@ type Taint struct {
 }
 
 type TaintList []*Taint
+
+type Toleration struct {
+	Effect            string `db:"effect"`
+	Key               string `db:"key"`
+	Pod               string `db:"pod_name"`
+	Value             string `db:"value"`
+	TolerationSeconds *int64 `db:"toleration_seconds"`
+	Operator          string `db:"operator"`
+}
+
+type TolerationList []*Toleration
 
 func NewInfo(ctx context.Context, clientset *kubernetes.Clientset) *Info {
 	return &Info{
@@ -113,6 +124,7 @@ func newBackoff(opts fetch.Options) retry.Backoff {
 func (r *Info) fetchPods(ctx context.Context, _ fetch.Options) error {
 	var err error
 	r.Pods, err = k8spod.Fetch(ctx, r.clientset)
+	r.Tolerations = podsToTolerations(r.Pods)
 
 	return err
 }
@@ -120,7 +132,7 @@ func (r *Info) fetchPods(ctx context.Context, _ fetch.Options) error {
 func (r *Info) fetchNodes(ctx context.Context, opts fetch.Options) error {
 	var err error
 	r.Nodes, err = k8snode.Fetch(ctx, r.clientset, opts)
-	r.NodeTaints = nodesToTaints(r.Nodes)
+	r.Taints = nodesToTaints(r.Nodes)
 	return err
 }
 
@@ -168,4 +180,21 @@ func nodesToTaints(nodes k8snode.InfoList) TaintList {
 	}
 
 	return taints
+}
+
+func podsToTolerations(pods k8spod.InfoList) TolerationList {
+	tolerations := make(TolerationList, 0, len(pods))
+	for _, pod := range pods {
+		for _, toleration := range pod.Tolerations {
+			tolerations = append(tolerations, &Toleration{
+				Pod:               pod.Name,
+				Key:               toleration.Key,
+				Value:             toleration.Value,
+				TolerationSeconds: toleration.TolerationSeconds,
+				Operator:          toleration.Operator,
+			})
+		}
+	}
+
+	return tolerations
 }
