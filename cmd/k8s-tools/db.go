@@ -56,20 +56,13 @@ func newQueryDBCmd() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			ctx := cmd.Context()
 			data, err := db.Query(ctx, getCacheDir(), args[0])
-
-			output := ""
-
-			switch globalOptions.Format {
-			case format.TableFormat:
-				output = format.Table(data)
-			case format.JSONFormat:
-				output = format.JSON(data)
-			default:
-				log.Fatalf("Unsupported format: %s", globalOptions.Format)
-			}
-
 			if err != nil {
 				log.Fatalf("Failed to query DB: %v", err)
+			}
+
+			output, err := format.Apply(globalOptions.Format, data)
+			if err != nil {
+				log.Fatalf("Failed to format output: %v", err)
 			}
 
 			fmt.Println(output)
