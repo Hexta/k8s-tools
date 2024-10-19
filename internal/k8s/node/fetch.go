@@ -24,7 +24,6 @@ func Fetch(ctx context.Context, clientset *kubernetes.Clientset, opts fetch.Opti
 	}
 
 	for {
-		log.Debugf("Listing nodes with continue token %q", continueToken)
 		list, err := clientset.CoreV1().Nodes().List(ctx, v1.ListOptions{
 			Continue:      continueToken,
 			LabelSelector: opts.LabelSelector,

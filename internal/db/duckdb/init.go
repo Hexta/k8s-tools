@@ -83,7 +83,10 @@ func InitDB(ctx context.Context, dataDir string, k8sInfo *k8s.Info) error {
 			return InsertSTS(con, db, k8sInfo.STSs)
 		},
 		func() error {
-			return InsertDS(con, db, k8sInfo.DSs)
+			return InsertDSs(con, db, k8sInfo.DSs)
+		},
+		func() error {
+			return InsertServices(con, db, k8sInfo.Services)
 		},
 	}
 

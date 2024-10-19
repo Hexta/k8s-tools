@@ -96,3 +96,25 @@ CREATE TABLE IF NOT EXISTS k8s.ds (
 	number_unavailable INTEGER,
     PRIMARY KEY (namespace, name)
 );
+
+CREATE TABLE IF NOT EXISTS k8s.services (
+    name STRING,
+    namespace STRING,
+    labels MAP(STRING, STRING),
+    annotations MAP(STRING, STRING),
+    creation_ts TIMESTAMP,
+
+    cluster_ip STRING,
+    cluster_ips STRING[],
+    external_ips STRING[],
+    external_traffic_policy STRING,
+    health_check_node_port INTEGER,
+    load_balancer_class STRING,
+    load_balancer_source_ranges STRING[],
+    publish_not_ready_addresses BOOLEAN,
+    reason STRING,
+    selector MAP(STRING, STRING),
+    session_affinity STRING,
+    type STRING,
+    PRIMARY KEY (name, namespace)
+)

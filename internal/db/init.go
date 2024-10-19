@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"time"
 
 	"github.com/Hexta/k8s-tools/internal/db/duckdb"
 	"github.com/Hexta/k8s-tools/internal/k8s"
@@ -9,8 +10,11 @@ import (
 )
 
 func InitDB(ctx context.Context, dataDir string, k8sInfo *k8s.Info) error {
-	log.Debugf("Initializing database - start")
-	defer log.Debugf("Initializing database - done")
+	start := time.Now()
+	log.Debugf("Initializing database")
+	defer func() {
+		log.Debugf("Initializing database: done, elapsed: %s", time.Since(start))
+	}()
 
 	return duckdb.InitDB(ctx, dataDir, k8sInfo)
 }
