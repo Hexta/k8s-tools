@@ -1,9 +1,5 @@
-CI_VERSION = $(shell git describe --tags --abbrev=8 --dirty --always --long)
-
-LDFLAGS := -w -s
-LDFLAGS := "$(LDFLAGS) -X 'github.com/Hexta/k8s-tools/pkg/version.version=${CI_VERSION}'"
-
 ENV := CGO_ENABLED=1
+LDFLAGS := "-w -s"
 
 BIN_NAME_SUFFIX :=
 

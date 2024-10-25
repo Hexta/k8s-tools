@@ -3,7 +3,7 @@
 Generate documentation
 
 ```
-k8s-tools docs generate [flags]
+k8s-tools docs generate [output dir] [flags]
 ```
 
 ### Options

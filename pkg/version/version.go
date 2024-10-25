@@ -1,7 +1,14 @@
 package version
 
-var version = "v0.0.19"
+import "runtime/debug"
+
+var defaultVersion = "dev"
 
 func Version() string {
-	return version
+	info, ok := debug.ReadBuildInfo()
+	if !ok {
+		return defaultVersion
+	}
+
+	return info.Main.Version
 }
