@@ -10,45 +10,48 @@ import (
 )
 
 const (
-	cliDocsRootDir = "./docs/cli"
+	defaultCLIDocsRootDir = "./docs/cli"
 )
 
-func newDocsCmd() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "docs",
-		Short: "Documentation for k8s-tools",
-	}
-
-	cmd.AddCommand(newDocsGenerateCmd())
-
-	return cmd
+var DocsCmd = &cobra.Command{
+	Use:   "docs",
+	Short: "Documentation for k8s-tools",
 }
 
-func newDocsGenerateCmd() *cobra.Command {
-	return &cobra.Command{
-		Use:   "generate",
-		Short: "Generate documentation",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			err := generateMarkdownDocs()
-			if err != nil {
-				log.Errorf("Failed to generate documentation: %v", err)
-			}
-			return err
-		},
-	}
+var docsGenerateCommand = &cobra.Command{
+	Use:   "generate [output dir]",
+	Short: "Generate documentation",
+	Args:  cobra.MaximumNArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		outputDir := defaultCLIDocsRootDir
+		if len(args) > 0 {
+			outputDir = args[0]
+		}
+
+		err := generateMarkdownDocs(outputDir)
+		if err != nil {
+			log.Errorf("Failed to generate documentation: %v", err)
+		}
+		return err
+	},
 }
 
-func generateMarkdownDocs() error {
-	log.Infof("Generating markdown docs for CLI in directory: %v", cliDocsRootDir)
-	err := os.MkdirAll(cliDocsRootDir, 0o755)
+func generateMarkdownDocs(outputDir string) error {
+	log.Infof("Generating markdown docs for CLI in directory: %v", outputDir)
+	err := os.MkdirAll(outputDir, 0o755)
 	if err != nil {
 		return fmt.Errorf("failed to create docs directory: %w", err)
 	}
 
-	return doc.GenMarkdownTree(rootCmd, cliDocsRootDir)
+	return doc.GenMarkdownTree(rootCmd, outputDir)
+}
+
+func init() {
+	DocsCmd.AddCommand(docsGenerateCommand)
+	rootCmd.DisableAutoGenTag = true
 }
 
 func init() {
 	rootCmd.DisableAutoGenTag = true
-	rootCmd.AddCommand(newDocsCmd())
+	rootCmd.AddCommand(DocsCmd)
 }
