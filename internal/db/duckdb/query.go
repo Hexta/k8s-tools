@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"slices"
 
 	"github.com/Hexta/k8s-tools/internal/format"
 	log "github.com/sirupsen/logrus"
@@ -75,8 +76,9 @@ func newColumnsReader(rows *sql.Rows) (*columnsReader, error) {
 		return nil, fmt.Errorf("failed to get columns: %w", err)
 	}
 
-	columns := make([]interface{}, len(columnNames))
-	columnPtrs := make([]interface{}, len(columnNames))
+	columnCount := len(columnNames)
+	columns := make([]interface{}, columnCount)
+	columnPtrs := make([]interface{}, columnCount)
 
 	for i := range columns {
 		columnPtrs[i] = &columns[i]
@@ -89,11 +91,11 @@ func newColumnsReader(rows *sql.Rows) (*columnsReader, error) {
 	}, nil
 }
 
-func (cr columnsReader) ReadColumns() ([]interface{}, error) {
+func (cr *columnsReader) ReadColumns() ([]interface{}, error) {
 	err := cr.rows.Scan(cr.columnPtrs...)
 	if err != nil {
 		return nil, err
 	}
 
-	return cr.columns, nil
+	return slices.Clone(cr.columns), nil
 }
