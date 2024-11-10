@@ -23,13 +23,13 @@ import (
 // Table names
 const (
 	ContainersTable     = "containers"
-	DSTable             = "ds"
+	DSTable             = "daemonsets"
 	DeploymentsTable    = "deployments"
-	HPATable            = "hpa"
+	HPATable            = "horizontal_pod_autoscalers"
 	InitContainersTable = "init_containers"
 	NodesTable          = "nodes"
 	PodsTable           = "pods"
-	STSTable            = "sts"
+	STSTable            = "stateful_sets"
 	Schema              = "k8s"
 	ServiceTable        = "services"
 	TaintsTable         = "taints"

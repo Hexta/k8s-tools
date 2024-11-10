@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS k8s.deployments (
     PRIMARY KEY (namespace, name)
 );
 
-CREATE TABLE IF NOT EXISTS k8s.ds (
+CREATE TABLE IF NOT EXISTS k8s.daemonsets (
     name STRING,
     namespace STRING,
     creation_ts TIMESTAMP,
@@ -33,8 +33,9 @@ CREATE TABLE IF NOT EXISTS k8s.ds (
 	number_unavailable INTEGER,
     PRIMARY KEY (namespace, name)
 );
+CREATE VIEW IF NOT EXISTS k8s.ds AS SELECT * FROM k8s.daemonsets;
 
-CREATE TABLE IF NOT EXISTS k8s.hpa (
+CREATE TABLE IF NOT EXISTS k8s.horizontal_pod_autoscalers (
     name STRING,
     namespace STRING,
     creation_ts TIMESTAMP,
@@ -43,6 +44,7 @@ CREATE TABLE IF NOT EXISTS k8s.hpa (
     desired_replicas INTEGER,
     PRIMARY KEY (namespace, name)
 );
+CREATE VIEW IF NOT EXISTS k8s.hpa AS SELECT * FROM k8s.horizontal_pod_autoscalers;
 
 CREATE TABLE IF NOT EXISTS k8s.init_containers (
     name STRING,
@@ -134,7 +136,7 @@ CREATE TABLE IF NOT EXISTS k8s.services (
     PRIMARY KEY (namespace, name)
 );
 
-CREATE TABLE IF NOT EXISTS k8s.sts (
+CREATE TABLE IF NOT EXISTS k8s.stateful_sets (
     name STRING,
     namespace STRING,
     creation_ts TIMESTAMP,
@@ -142,6 +144,7 @@ CREATE TABLE IF NOT EXISTS k8s.sts (
     replicas INTEGER,
     PRIMARY KEY (namespace, name)
 );
+CREATE VIEW IF NOT EXISTS k8s.sts AS SELECT * FROM k8s.stateful_sets;
 
 CREATE TABLE IF NOT EXISTS k8s.taints (
     node_name STRING,
