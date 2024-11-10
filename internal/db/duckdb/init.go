@@ -21,17 +21,9 @@ var (
 
 func InitDB(ctx context.Context, dataDir string, k8sInfo *k8s.Info) error {
 	dbDir := filepath.Join(dataDir, duckdbDir)
-
-	if _, err := os.Stat(dbDir); !os.IsNotExist(err) {
-		err := os.RemoveAll(dbDir)
-		if err != nil {
-			log.Errorf("failed to remove DB dir: %s", err)
-		}
-	}
-
-	err := os.MkdirAll(dbDir, 0o755)
+	err := resetDBDirectory(dbDir)
 	if err != nil {
-		return fmt.Errorf("failed to create DB directory %s: %w", dbDir, err)
+		return err
 	}
 
 	connector, err := initConnector(dataDir)
@@ -102,7 +94,7 @@ func InitDB(ctx context.Context, dataDir string, k8sInfo *k8s.Info) error {
 		}
 	}
 
-	return nil
+	return flush(ctx, db)
 }
 
 func runDDL(ctx context.Context, db *sql.DB) error {
@@ -117,4 +109,26 @@ func runDDL(ctx context.Context, db *sql.DB) error {
 	}
 
 	return nil
+}
+
+// resetDBDirectory ensures that the database directory is clean and ready.
+func resetDBDirectory(dbDir string) error {
+	// Clean up existing directory if it exists
+	if _, err := os.Stat(dbDir); !os.IsNotExist(err) {
+		if err := os.RemoveAll(dbDir); err != nil {
+			log.Errorf("Failed to remove DB dir: %s", err)
+			return err
+		}
+	}
+
+	// Create directory
+	if err := os.MkdirAll(dbDir, 0o755); err != nil {
+		return fmt.Errorf("failed to create DB directory %s: %w", dbDir, err)
+	}
+	return nil
+}
+
+func flush(ctx context.Context, db *sql.DB) error {
+	_, err := db.ExecContext(ctx, "CHECKPOINT")
+	return err
 }
