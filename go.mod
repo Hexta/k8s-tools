@@ -1,6 +1,6 @@
 module github.com/Hexta/k8s-tools
 
-go 1.23.2
+go 1.23.3
 
 require (
 	github.com/DATA-DOG/go-sqlmock v1.5.2
@@ -8,7 +8,7 @@ require (
 	github.com/charmbracelet/bubbles v0.20.0
 	github.com/charmbracelet/bubbletea v1.1.2
 	github.com/charmbracelet/lipgloss v1.0.0
-	github.com/marcboeker/go-duckdb v1.8.2
+	github.com/marcboeker/go-duckdb v1.8.3
 	github.com/rodaine/table v1.3.0
 	github.com/sethvargo/go-retry v0.3.0
 	github.com/sirupsen/logrus v1.9.3
@@ -20,7 +20,7 @@ require (
 )
 
 require (
-	github.com/apache/arrow/go/v17 v17.0.0 // indirect
+	github.com/apache/arrow-go/v18 v18.0.0 // indirect
 	github.com/atotto/clipboard v0.1.4 // indirect
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
 	github.com/charmbracelet/x/ansi v0.4.2 // indirect
