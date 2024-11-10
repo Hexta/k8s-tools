@@ -9,7 +9,7 @@ import (
 
 func Table(input *Data) string {
 	var buf bytes.Buffer
-	tbl := table.New(input.columns...).WithWriter(&buf)
+	tbl := table.New(input.columns...).WithWriter(&buf).WithHeaderSeparatorRow('_')
 
 	for _, row := range input.rows {
 		tbl.AddRow(row...)
