@@ -59,7 +59,7 @@ k8s-tools can save K8s cluster state in internal DB to ease analyzing.
 ##### Useful queries
 1. List tables
    ```shell
-   k8s-tools db query "select table_name from information_schema.tables where table_schema='k8s' order by table_name"
+   k8s-tools db query "select table_schema, table_name, table_type from information_schema.tables where table_schema='k8s' order by table_name""
    ```
 
 ## Contributing
