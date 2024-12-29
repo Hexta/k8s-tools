@@ -13,6 +13,7 @@ import (
 	"github.com/Hexta/k8s-tools/internal/k8s/hpa"
 	k8snode "github.com/Hexta/k8s-tools/internal/k8s/node"
 	k8spod "github.com/Hexta/k8s-tools/internal/k8s/pod"
+	"github.com/Hexta/k8s-tools/internal/k8s/pv"
 	k8sservice "github.com/Hexta/k8s-tools/internal/k8s/service"
 	"github.com/Hexta/k8s-tools/internal/k8s/sts"
 	"github.com/sethvargo/go-retry"
@@ -27,6 +28,7 @@ type Info struct {
 	HPAs        hpa.InfoList
 	Nodes       k8snode.InfoList
 	Pods        k8spod.InfoList
+	PVs         pv.InfoList
 	Services    k8sservice.InfoList
 	STSs        sts.InfoList
 	Taints      TaintList
@@ -85,6 +87,7 @@ func (r *Info) Fetch(opts fetch.Options) error {
 	r.startFetchFunc(r.fetchSTSs, "STSs", &wg, opts, errorCh)
 	r.startFetchFunc(r.fetchDSs, "DSs", &wg, opts, errorCh)
 	r.startFetchFunc(r.fetchServices, "Services", &wg, opts, errorCh)
+	r.startFetchFunc(r.fetchPVs, "PVs", &wg, opts, errorCh)
 
 	wg.Wait()
 	close(errorCh)
@@ -157,6 +160,12 @@ func (r *Info) fetchSTSs(ctx context.Context, _ fetch.Options) error {
 func (r *Info) fetchDSs(ctx context.Context, _ fetch.Options) error {
 	var err error
 	r.DSs, err = ds.Fetch(ctx, r.clientset)
+	return err
+}
+
+func (r *Info) fetchPVs(ctx context.Context, _ fetch.Options) error {
+	var err error
+	r.PVs, err = pv.Fetch(ctx, r.clientset)
 	return err
 }
 

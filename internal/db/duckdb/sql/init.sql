@@ -79,6 +79,25 @@ CREATE TABLE IF NOT EXISTS k8s.nodes (
     os_image STRING
 );
 
+CREATE TABLE IF NOT EXISTS k8s.persistent_volumes (
+    name STRING,
+    labels MAP(STRING, STRING),
+    annotations MAP(STRING, STRING),
+    creation_ts TIMESTAMP,
+
+    access_modes STRING[],
+    capacity MAP(STRING, INT64),
+    claim_ref_kind STRING,
+    claim_ref_name STRING,
+    claim_ref_namespace STRING,
+    persistent_volume_reclaim_policy STRING,
+    phase STRING,
+    storage_class_name STRING,
+    volume_mode STRING,
+    PRIMARY KEY (name)
+);
+CREATE VIEW IF NOT EXISTS k8s.pvs AS SELECT * FROM k8s.persistent_volumes;
+
 CREATE TABLE IF NOT EXISTS k8s.pods (
     name STRING,
     namespace STRING,
