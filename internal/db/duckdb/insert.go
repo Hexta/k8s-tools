@@ -15,6 +15,7 @@ import (
 	"github.com/Hexta/k8s-tools/internal/k8s/hpa"
 	k8snode "github.com/Hexta/k8s-tools/internal/k8s/node"
 	k8spod "github.com/Hexta/k8s-tools/internal/k8s/pod"
+	"github.com/Hexta/k8s-tools/internal/k8s/pv"
 	"github.com/Hexta/k8s-tools/internal/k8s/service"
 	"github.com/Hexta/k8s-tools/internal/k8s/sts"
 	"github.com/marcboeker/go-duckdb"
@@ -28,6 +29,7 @@ const (
 	HPATable            = "horizontal_pod_autoscalers"
 	InitContainersTable = "init_containers"
 	NodesTable          = "nodes"
+	PVTable             = "persistent_volumes"
 	PodsTable           = "pods"
 	STSTable            = "stateful_sets"
 	Schema              = "k8s"
@@ -94,6 +96,10 @@ func InsertHPAs(con driver.Conn, db *sql.DB, items hpa.InfoList) error {
 	return doInsert[hpa.Info](con, db, Schema, HPATable, items)
 }
 
+func InsertPVs(con driver.Conn, db *sql.DB, items pv.InfoList) error {
+	return doInsert[pv.Info](con, db, Schema, PVTable, items)
+}
+
 func InsertSTS(con driver.Conn, db *sql.DB, items sts.InfoList) error {
 	return doInsert[sts.Info](con, db, Schema, STSTable, items)
 }
@@ -134,7 +140,7 @@ func doInsert[T any](con driver.Conn, db *sql.DB, schema string, table string, i
 	return appender.Flush()
 }
 
-func mapStringStringToDuckdbMap(m map[string]string) duckdb.Map {
+func mapAnyToDuckdbMap[K comparable, V any](m map[K]V) duckdb.Map {
 	dm := make(duckdb.Map, len(m))
 
 	for k, v := range m {
@@ -173,7 +179,9 @@ func prepareRowValueSlice(item any, columnIndexByName map[string]int) ([]driver.
 
 		switch fieldValueTyped := fieldValueInterface.(type) {
 		case map[string]string:
-			fieldValueInterface = mapStringStringToDuckdbMap(fieldValueTyped)
+			fieldValueInterface = mapAnyToDuckdbMap(fieldValueTyped)
+		case map[string]int64:
+			fieldValueInterface = mapAnyToDuckdbMap(fieldValueTyped)
 		case *bool:
 			if fieldValueTyped == nil {
 				fieldValueInterface = false
