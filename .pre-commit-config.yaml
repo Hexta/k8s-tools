@@ -24,7 +24,7 @@ repos:
           - pre-commit
 
   - repo: https://github.com/golangci/golangci-lint
-    rev: v1.61.0
+    rev: v1.63.4
     hooks:
       - id: golangci-lint
         entry: golangci-lint run --fix ./...
@@ -35,7 +35,7 @@ repos:
           - pre-commit
 
   - repo: https://github.com/gitleaks/gitleaks
-    rev: v8.21.1
+    rev: v8.23.3
     hooks:
       - id: gitleaks
         stages:
