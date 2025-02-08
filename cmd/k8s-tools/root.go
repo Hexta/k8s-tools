@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"time"
@@ -14,18 +15,17 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type FormatType string
-
 var (
 	globalOptions = struct {
 		CacheDir                string
 		Format                  format.Format
+		FormatOptions           format.Options
 		Kubeconfig              string
 		Verbose                 bool
-		k8sRetryInitialInterval time.Duration
-		k8sRetryJitterPercent   uint64
-		k8sRetryMaxAttempts     uint64
-		k8sRetryMaxInterval     time.Duration
+		K8sRetryInitialInterval time.Duration
+		K8sRetryJitterPercent   uint64
+		K8sRetryMaxAttempts     uint64
+		K8sRetryMaxInterval     time.Duration
 	}{
 		Format: format.TableFormat,
 	}
@@ -37,9 +37,14 @@ var rootCmd = &cobra.Command{
 	Version: version.Version(),
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 		logutil.ConfigureLogger(globalOptions.Verbose)
-		err := os.MkdirAll(getCacheDir(), 0o755)
-		if err != nil {
-			log.Fatalf("error creating cache directory: %v", err)
+
+		cacheDir := getCacheDir()
+		if cacheDir == "" {
+			return fmt.Errorf("unable to determine cache directory")
+		}
+
+		if err := os.MkdirAll(cacheDir, 0o755); err != nil {
+			return fmt.Errorf("error creating cache directory: %w", err)
 		}
 
 		return nil
@@ -51,12 +56,14 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&globalOptions.CacheDir, "cache-dir", "", "cache directory")
 	rootCmd.PersistentFlags().StringVar(&globalOptions.Kubeconfig, "kubeconfig", "", "kubeconfig file")
 
-	rootCmd.PersistentFlags().DurationVarP(&globalOptions.k8sRetryInitialInterval, "k8s-retry-initial-interval", "", time.Second, "Initial interval for Kubernetes API retry")
-	rootCmd.PersistentFlags().Uint64VarP(&globalOptions.k8sRetryJitterPercent, "k8s-retry-jitter-percent", "", 50, "Jitter percent for Kubernetes API retry")
-	rootCmd.PersistentFlags().Uint64VarP(&globalOptions.k8sRetryMaxAttempts, "k8s-retry-max-attempts", "", 5, "Maximum number of attempts for Kubernetes API retry")
-	rootCmd.PersistentFlags().DurationVarP(&globalOptions.k8sRetryMaxInterval, "k8s-retry-max-interval", "", 10*time.Second, "Maximum interval between retries for Kubernetes API")
+	rootCmd.PersistentFlags().DurationVarP(&globalOptions.K8sRetryInitialInterval, "k8s-retry-initial-interval", "", time.Second, "Initial interval for Kubernetes API retry")
+	rootCmd.PersistentFlags().Uint64VarP(&globalOptions.K8sRetryJitterPercent, "k8s-retry-jitter-percent", "", 50, "Jitter percent for Kubernetes API retry")
+	rootCmd.PersistentFlags().Uint64VarP(&globalOptions.K8sRetryMaxAttempts, "k8s-retry-max-attempts", "", 5, "Maximum number of attempts for Kubernetes API retry")
+	rootCmd.PersistentFlags().DurationVarP(&globalOptions.K8sRetryMaxInterval, "k8s-retry-max-interval", "", 10*time.Second, "Maximum interval between retries for Kubernetes API")
 
 	rootCmd.PersistentFlags().VarP(&globalOptions.Format, "output", "o", "output format (json, table, vertical)")
+	rootCmd.PersistentFlags().BoolVar(&globalOptions.FormatOptions.NoHeaders, "no-headers", false, "do not print headers")
+
 	err := rootCmd.RegisterFlagCompletionFunc("output", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 		return []string{
 			format.JSONFormat, format.TableFormat, format.VerticalFormat,

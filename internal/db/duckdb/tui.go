@@ -121,7 +121,7 @@ func (m model) handleKeyEnter() string {
 		return fmt.Sprintf("ERROR: %v", err)
 	}
 
-	return format.Table(result)
+	return format.Table(result, format.Options{})
 }
 
 func (m model) View() string {
