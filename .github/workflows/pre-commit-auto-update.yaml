@@ -6,6 +6,9 @@ on:
     - cron: 0 8 1 * * # Every first day of the month at 08:00 UTC
 jobs:
   auto-update:
+    permissions:
+      contents: write
+      pull-requests: write
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
