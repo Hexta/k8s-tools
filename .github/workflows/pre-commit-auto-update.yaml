@@ -30,8 +30,9 @@ jobs:
         uses: peter-evans/create-pull-request@v7
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          branch: INFRA-0-auto-update-pre-commit-hooks
-          title: INFRA-0 Auto-update pre-commit hooks
+          branch: auto-update-pre-commit-hooks
+          title: Auto-update pre-commit hooks
           commit-message: Auto-update pre-commit hooks
           body: Update pre-commit tools to the latest version
           labels: dependencies
+          sign-commits: true
