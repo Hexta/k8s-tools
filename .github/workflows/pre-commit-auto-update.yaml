@@ -3,7 +3,7 @@ name: Pre-commit auto-update
 on:
   workflow_dispatch:
   schedule:
-    - cron: 0 8 1 * * # Every first day of month at 08:00 UTC
+    - cron: 0 8 1 * * # Every first day of the month at 08:00 UTC
 jobs:
   auto-update:
     runs-on: ubuntu-latest
@@ -14,7 +14,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: 3.10
+          python-version: "3.13"
           cache: pip
 
       - name: Install pre-commit
