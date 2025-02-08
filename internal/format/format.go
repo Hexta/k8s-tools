@@ -4,6 +4,10 @@ import "fmt"
 
 type Format string
 
+type Options struct {
+	NoHeaders bool
+}
+
 const (
 	JSONFormat     = "json"
 	TableFormat    = "table"
@@ -28,12 +32,12 @@ func (f *Format) Type() string {
 	return "Format"
 }
 
-func Apply(format Format, input *Data) (string, error) {
+func Apply(format Format, options Options, input *Data) (string, error) {
 	switch format {
 	case JSONFormat:
 		return JSON(input), nil
 	case TableFormat:
-		return Table(input), nil
+		return Table(input, options), nil
 	case VerticalFormat:
 		return Vertical(input), nil
 	default:

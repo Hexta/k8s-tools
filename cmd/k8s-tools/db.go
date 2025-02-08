@@ -28,10 +28,10 @@ func newInitDBCmd() *cobra.Command {
 
 			k8sInfo := k8s.NewInfo(ctx, clientSet)
 			err := k8sInfo.Fetch(fetch.Options{
-				RetryInitialInterval: globalOptions.k8sRetryInitialInterval,
-				RetryJitterPercent:   globalOptions.k8sRetryJitterPercent,
-				RetryMaxAttempts:     globalOptions.k8sRetryMaxAttempts,
-				RetryMaxInterval:     globalOptions.k8sRetryMaxInterval,
+				RetryInitialInterval: globalOptions.K8sRetryInitialInterval,
+				RetryJitterPercent:   globalOptions.K8sRetryJitterPercent,
+				RetryMaxAttempts:     globalOptions.K8sRetryMaxAttempts,
+				RetryMaxInterval:     globalOptions.K8sRetryMaxInterval,
 			})
 			if err != nil {
 				log.Fatalf("Failed to fetch K8s info: %v", err)
@@ -60,7 +60,7 @@ func newQueryDBCmd() *cobra.Command {
 				log.Fatalf("Failed to query DB: %v", err)
 			}
 
-			output, err := format.Apply(globalOptions.Format, data)
+			output, err := format.Apply(globalOptions.Format, globalOptions.FormatOptions, data)
 			if err != nil {
 				log.Fatalf("Failed to format output: %v", err)
 			}

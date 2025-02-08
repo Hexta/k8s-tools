@@ -2,7 +2,7 @@
 
 A toolset for inspecting Kubernetes clusters.
 
-Provides SQL interface for querying information about K8s:
+k8s-tools provide a SQL interface for querying information about various Kubernetes resources, including:
 * Containers
 * DaemonSets
 * Deployments
@@ -13,7 +13,31 @@ Provides SQL interface for querying information about K8s:
 * Services
 * StatefulSets
 
+## Features
+
+- SQL-based querying of Kubernetes resources
+- Interactive TUI for database exploration
+- Support for multiple output formats (JSON, Table, Vertical)
+
+## Database Schema
+
+The internal database contains the following schemas:
+
+- `k8s`: Main schema containing all Kubernetes resource tables
+  - `nodes`
+  - `pods`
+  - `deployments`
+  - (etc...)
+
+For detailed schema information, see [DB Documentation](docs/db/index.md)
+
 ## Getting Started
+
+### Prerequisites
+
+- Go 1.23 or later
+- CGO enabled environment
+- Kubernetes cluster access configured
 
 ### Installation
 
@@ -36,11 +60,6 @@ CGO_ENABLED=1 go install github.com/Hexta/k8s-tools/cmd/k8s-tools@latest
     ```shell
     k8s-tools node utilisation -l topology.kubernetes.io/zone=eu-central-1a
     ```
-
-#### Internal DB
-
-k8s-tools can save K8s cluster state in internal DB to ease analyzing.
-[DB Documentation](docs/db/index.md)
 
 1. Init DB.
     ```shell
@@ -65,4 +84,8 @@ k8s-tools can save K8s cluster state in internal DB to ease analyzing.
 
 ## Contributing
 
-Please see our [contributing guidelines](CONTRIBUTING.md).
+Contributions are welcome! Please see our [contributing guidelines](CONTRIBUTING.md).
+
+## License
+
+This project is licensed under the Apache License 2.0.
