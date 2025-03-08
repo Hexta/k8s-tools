@@ -46,6 +46,12 @@ CREATE TABLE IF NOT EXISTS k8s.horizontal_pod_autoscalers (
 );
 CREATE VIEW IF NOT EXISTS k8s.hpa AS SELECT * FROM k8s.horizontal_pod_autoscalers;
 
+CREATE TABLE IF NOT EXISTS k8s.images (
+    names STRING[],
+    node_name STRING,
+    size INTEGER
+);
+
 CREATE TABLE IF NOT EXISTS k8s.init_containers (
     name STRING,
     namespace STRING,

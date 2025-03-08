@@ -19,12 +19,13 @@ type Info struct {
 	ContainerRuntimeVersion string            `db:"container_runtime_version"`
 	CPUUtilisation          float64           `db:"cpu_utilisation"`
 	CreationTimestamp       time.Time         `db:"creation_ts"`
-	InstanceType            string            `db:"instance_type"`
-	KernelVersion           string            `db:"kernel_version"`
-	KubeletVersion          string            `db:"kubelet_version"`
-	MemoryUtilisation       float64           `db:"memory_utilisation"`
-	OperatingSystem         string            `db:"operating_system"`
-	OSImage                 string            `db:"os_image"`
+	Images                  ImageList
+	InstanceType            string  `db:"instance_type"`
+	KernelVersion           string  `db:"kernel_version"`
+	KubeletVersion          string  `db:"kubelet_version"`
+	MemoryUtilisation       float64 `db:"memory_utilisation"`
+	OperatingSystem         string  `db:"operating_system"`
+	OSImage                 string  `db:"os_image"`
 	Taints                  TaintList
 }
 
@@ -42,3 +43,11 @@ type Taint struct {
 }
 
 type TaintList []*Taint
+
+type Image struct {
+	Names []string `db:"names"`
+	Node  string   `db:"node_name"`
+	Size  int      `db:"size"`
+}
+
+type ImageList []*Image

@@ -26,6 +26,7 @@ type Info struct {
 	DSs         ds.InfoList
 	Deployments deployment.InfoList
 	HPAs        hpa.InfoList
+	Images      k8snode.ImageList
 	Nodes       k8snode.InfoList
 	Pods        k8spod.InfoList
 	PVs         pv.InfoList
@@ -136,6 +137,7 @@ func (r *Info) fetchNodes(ctx context.Context, opts fetch.Options) error {
 	var err error
 	r.Nodes, err = k8snode.Fetch(ctx, r.clientset, opts)
 	r.Taints = nodesToTaints(r.Nodes)
+	r.Images = nodesToImages(r.Nodes)
 	return err
 }
 
@@ -189,6 +191,14 @@ func nodesToTaints(nodes k8snode.InfoList) TaintList {
 	}
 
 	return taints
+}
+
+func nodesToImages(nodes k8snode.InfoList) k8snode.ImageList {
+	images := make(k8snode.ImageList, 0, len(nodes))
+	for _, node := range nodes {
+		images = append(images, node.Images...)
+	}
+	return images
 }
 
 func podsToTolerations(pods k8spod.InfoList) TolerationList {

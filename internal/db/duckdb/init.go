@@ -66,6 +66,9 @@ func InitDB(ctx context.Context, dataDir string, k8sInfo *k8s.Info) error {
 			return InsertHPAs(con, db, k8sInfo.HPAs)
 		},
 		func() error {
+			return InsertImages(con, db, k8sInfo.Images)
+		},
+		func() error {
 			return InsertInitContainers(con, db, k8sInfo.Pods)
 		},
 		func() error {
