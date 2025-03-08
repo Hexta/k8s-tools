@@ -27,6 +27,7 @@ const (
 	DSTable             = "daemonsets"
 	DeploymentsTable    = "deployments"
 	HPATable            = "horizontal_pod_autoscalers"
+	ImagesTable         = "images"
 	InitContainersTable = "init_containers"
 	NodesTable          = "nodes"
 	PVTable             = "persistent_volumes"
@@ -41,6 +42,10 @@ const (
 const (
 	containerListCapacity = 65536
 )
+
+func InsertImages(con driver.Conn, db *sql.DB, items k8snode.ImageList) error {
+	return doInsert[k8snode.Image](con, db, Schema, ImagesTable, items)
+}
 
 func InsertNodes(con driver.Conn, db *sql.DB, items k8snode.InfoList) error {
 	return doInsert[k8snode.Info](con, db, Schema, NodesTable, items)

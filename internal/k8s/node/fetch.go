@@ -39,6 +39,7 @@ func Fetch(ctx context.Context, clientset *kubernetes.Clientset, opts fetch.Opti
 
 			addrMap := getAddressMap(node.Status.Addresses)
 			taints := getTaints(node.Spec.Taints)
+			images := getImages(node)
 
 			nodes = append(nodes, &Info{
 				Address:                 addrMap,
@@ -52,6 +53,7 @@ func Fetch(ctx context.Context, clientset *kubernetes.Clientset, opts fetch.Opti
 				ContainerRuntimeVersion: node.Status.NodeInfo.ContainerRuntimeVersion,
 				CPUUtilisation:          utilisation.CPU,
 				CreationTimestamp:       node.CreationTimestamp.Time,
+				Images:                  images,
 				InstanceType:            instanceType,
 				KernelVersion:           node.Status.NodeInfo.KernelVersion,
 				KubeletVersion:          node.Status.NodeInfo.KubeletVersion,
@@ -72,7 +74,7 @@ func Fetch(ctx context.Context, clientset *kubernetes.Clientset, opts fetch.Opti
 	return nodes, nil
 }
 
-func getTaints(taints []apicorev1.Taint) []*Taint {
+func getTaints(taints []apicorev1.Taint) TaintList {
 	taintList := make([]*Taint, 0, len(taints))
 
 	for _, taint := range taints {
@@ -84,6 +86,20 @@ func getTaints(taints []apicorev1.Taint) []*Taint {
 	}
 
 	return taintList
+}
+
+func getImages(node *apicorev1.Node) ImageList {
+	imageList := make(ImageList, 0, len(node.Status.Images))
+
+	for _, image := range node.Status.Images {
+		imageList = append(imageList, &Image{
+			Names: image.Names,
+			Node:  node.Name,
+			Size:  image.Size(),
+		})
+	}
+
+	return imageList
 }
 
 func getAddressMap(addresses []apicorev1.NodeAddress) map[string]string {
