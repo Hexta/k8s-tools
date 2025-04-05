@@ -1,6 +1,7 @@
 module github.com/Hexta/k8s-tools
 
 go 1.24.1
+
 require (
 	github.com/DATA-DOG/go-sqlmock v1.5.2
 	github.com/alecthomas/chroma/v2 v2.15.0
