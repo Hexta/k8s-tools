@@ -1,10 +1,9 @@
----
+version: "2"
 linters:
   enable:
     - contextcheck
     - cyclop
     - gocritic
-    - goimports
     - gosec
     - paralleltest
     - promlinter
@@ -13,28 +12,45 @@ linters:
     - thelper
     - unparam
     - whitespace
-
-linters-settings:
-  cyclop:
-    max-complexity: 15
-  gocritic:
-    enabled-checks:
-      - appendCombine
-      - emptyStringTest
-      - importShadow
-      - octalLiteral
-      - rangeValCopy
-
-  gosec:
-    excludes:
-      - G114
-
-  revive:
-    rules:
-      - name: if-return
-        disabled: false
-      - name: import-alias-naming
-        disabled: false
+  settings:
+    cyclop:
+      max-complexity: 15
+    gocritic:
+      enabled-checks:
+        - appendCombine
+        - emptyStringTest
+        - importShadow
+        - octalLiteral
+        - rangeValCopy
+    gosec:
+      excludes:
+        - G114
+    revive:
+      rules:
+        - name: if-return
+          disabled: false
+        - name: import-alias-naming
+          disabled: false
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
+formatters:
+  enable:
+    - goimports
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
 
 run:
   timeout: 5m
