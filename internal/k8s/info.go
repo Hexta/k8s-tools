@@ -9,6 +9,7 @@ import (
 	"github.com/Hexta/k8s-tools/internal/k8s/container"
 	"github.com/Hexta/k8s-tools/internal/k8s/deployment"
 	"github.com/Hexta/k8s-tools/internal/k8s/ds"
+	"github.com/Hexta/k8s-tools/internal/k8s/endpoints"
 	"github.com/Hexta/k8s-tools/internal/k8s/fetch"
 	"github.com/Hexta/k8s-tools/internal/k8s/hpa"
 	k8snode "github.com/Hexta/k8s-tools/internal/k8s/node"
@@ -25,6 +26,7 @@ type Info struct {
 	Containers  container.InfoList
 	DSs         ds.InfoList
 	Deployments deployment.InfoList
+	Endpoints   endpoints.InfoList
 	HPAs        hpa.InfoList
 	Images      k8snode.ImageList
 	Nodes       k8snode.InfoList
@@ -85,6 +87,7 @@ func (r *Info) Fetch(opts fetch.Options) error {
 	r.startFetchFunc(r.fetchNodes, "Nodes", &wg, opts, errorCh)
 	r.startFetchFunc(r.fetchDeployments, "Deployments", &wg, opts, errorCh)
 	r.startFetchFunc(r.fetchHPAs, "HPAs", &wg, opts, errorCh)
+	r.startFetchFunc(r.fetchEndpoints, "Endpoints", &wg, opts, errorCh)
 	r.startFetchFunc(r.fetchSTSs, "STSs", &wg, opts, errorCh)
 	r.startFetchFunc(r.fetchDSs, "DSs", &wg, opts, errorCh)
 	r.startFetchFunc(r.fetchServices, "Services", &wg, opts, errorCh)
@@ -144,6 +147,12 @@ func (r *Info) fetchNodes(ctx context.Context, opts fetch.Options) error {
 func (r *Info) fetchDeployments(ctx context.Context, _ fetch.Options) error {
 	var err error
 	r.Deployments, err = deployment.Fetch(ctx, r.clientset)
+	return err
+}
+
+func (r *Info) fetchEndpoints(ctx context.Context, _ fetch.Options) error {
+	var err error
+	r.Endpoints, err = endpoints.Fetch(ctx, r.clientset)
 	return err
 }
 
