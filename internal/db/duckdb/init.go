@@ -63,10 +63,13 @@ func InitDB(ctx context.Context, dataDir string, k8sInfo *k8s.Info) error {
 			return InsertDSs(con, db, k8sInfo.DSs)
 		},
 		func() error {
-			return InsertEndpoints(con, db, k8sInfo.Endpoints)
+			return InsertEndpoints(con, db, k8sInfo.EndpointSlices)
 		},
 		func() error {
-			return InsertEndpointSubsets(con, db, k8sInfo.Endpoints)
+			return InsertEndpointSlicePorts(con, db, k8sInfo.EndpointSlices)
+		},
+		func() error {
+			return InsertEndpointSlices(con, db, k8sInfo.EndpointSlices)
 		},
 		func() error {
 			return InsertHPAs(con, db, k8sInfo.HPAs)
