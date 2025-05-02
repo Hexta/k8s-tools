@@ -35,23 +35,27 @@ CREATE TABLE IF NOT EXISTS k8s.daemonsets (
 );
 CREATE VIEW IF NOT EXISTS k8s.ds AS SELECT * FROM k8s.daemonsets;
 
-CREATE TABLE IF NOT EXISTS k8s.endpoints (
+CREATE TABLE IF NOT EXISTS k8s.endpoint_slices (
     name STRING,
     namespace STRING,
     annotations MAP(STRING, STRING),
     creation_ts TIMESTAMP,
     labels MAP(STRING, STRING),
+    address_type STRING,
+    api_version STRING,
+    kind STRING,
+    ports STRING[],
     PRIMARY KEY (namespace, name)
 );
 
-CREATE TABLE IF NOT EXISTS k8s.endpoints_subsets (
-    endpoints_name STRING,
+CREATE TABLE IF NOT EXISTS k8s.endpoints (
+    endpoint_slice_name STRING,
     namespace STRING,
+    addresses STRING[],
     hostname STRING,
     ip STRING,
     is_ready BOOLEAN,
     node_name STRING,
-    ports STRING[],
     has_target_ref BOOLEAN,
     target_ref_api_version STRING,
     target_ref_field_path STRING,
@@ -60,6 +64,16 @@ CREATE TABLE IF NOT EXISTS k8s.endpoints_subsets (
     target_ref_namespace STRING,
     target_ref_resource_version STRING,
     target_ref_uid STRING
+);
+
+CREATE TABLE IF NOT EXISTS k8s.endpoint_slice_ports (
+    endpoint_slice_name STRING,
+    namespace STRING,
+    app_protocol STRING,
+    name STRING,
+    port INTEGER,
+    protocol STRING,
+    PRIMARY KEY (namespace, endpoint_slice_name, name)
 );
 
 CREATE TABLE IF NOT EXISTS k8s.horizontal_pod_autoscalers (

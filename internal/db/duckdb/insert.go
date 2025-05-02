@@ -11,7 +11,7 @@ import (
 	"github.com/Hexta/k8s-tools/internal/k8s/container"
 	"github.com/Hexta/k8s-tools/internal/k8s/deployment"
 	"github.com/Hexta/k8s-tools/internal/k8s/ds"
-	"github.com/Hexta/k8s-tools/internal/k8s/endpoints"
+	"github.com/Hexta/k8s-tools/internal/k8s/endpointslices"
 	"github.com/Hexta/k8s-tools/internal/k8s/hpa"
 	k8snode "github.com/Hexta/k8s-tools/internal/k8s/node"
 	k8spod "github.com/Hexta/k8s-tools/internal/k8s/pod"
@@ -23,22 +23,23 @@ import (
 
 // Table names
 const (
-	ContainersTable      = "containers"
-	DSTable              = "daemonsets"
-	DeploymentsTable     = "deployments"
-	EndpointsTable       = "endpoints"
-	EndpointSubsetsTable = "endpoints_subsets"
-	HPATable             = "horizontal_pod_autoscalers"
-	ImagesTable          = "images"
-	InitContainersTable  = "init_containers"
-	NodesTable           = "nodes"
-	PVTable              = "persistent_volumes"
-	PodsTable            = "pods"
-	STSTable             = "stateful_sets"
-	Schema               = "k8s"
-	ServiceTable         = "services"
-	TaintsTable          = "taints"
-	TolerationsTable     = "tolerations"
+	ContainersTable         = "containers"
+	DSTable                 = "daemonsets"
+	DeploymentsTable        = "deployments"
+	EndpointsTable          = "endpoints"
+	EndpointSlicesTable     = "endpoint_slices"
+	EndpointSlicePortsTable = "endpoint_slice_ports"
+	HPATable                = "horizontal_pod_autoscalers"
+	ImagesTable             = "images"
+	InitContainersTable     = "init_containers"
+	NodesTable              = "nodes"
+	PVTable                 = "persistent_volumes"
+	PodsTable               = "pods"
+	STSTable                = "stateful_sets"
+	Schema                  = "k8s"
+	ServiceTable            = "services"
+	TaintsTable             = "taints"
+	TolerationsTable        = "tolerations"
 )
 
 const (
@@ -100,18 +101,28 @@ func InsertDeployments(con driver.Conn, db *sql.DB, items deployment.InfoList) e
 	return doInsert[deployment.Info](con, db, Schema, DeploymentsTable, items)
 }
 
-func InsertEndpoints(con driver.Conn, db *sql.DB, items endpoints.InfoList) error {
-	return doInsert[endpoints.Info](con, db, Schema, EndpointsTable, items)
+func InsertEndpointSlices(con driver.Conn, db *sql.DB, items endpointslices.InfoList) error {
+	return doInsert[endpointslices.Info](con, db, Schema, EndpointSlicesTable, items)
 }
 
-func InsertEndpointSubsets(con driver.Conn, db *sql.DB, items endpoints.InfoList) error {
-	subsets := make(endpoints.SubsetList, 0, endpointListCapacity)
+func InsertEndpoints(con driver.Conn, db *sql.DB, items endpointslices.InfoList) error {
+	endpoints := make(endpointslices.EndpointList, 0, endpointListCapacity)
 
 	for _, item := range items {
-		subsets = append(subsets, item.Subsets...)
+		endpoints = append(endpoints, item.Endpoints...)
 	}
 
-	return doInsert[endpoints.Subset](con, db, Schema, EndpointSubsetsTable, subsets)
+	return doInsert[endpointslices.Endpoint](con, db, Schema, EndpointsTable, endpoints)
+}
+
+func InsertEndpointSlicePorts(con driver.Conn, db *sql.DB, items endpointslices.InfoList) error {
+	ports := make(endpointslices.PortList, 0, endpointListCapacity)
+
+	for _, item := range items {
+		ports = append(ports, item.Ports...)
+	}
+
+	return doInsert[endpointslices.Port](con, db, Schema, EndpointSlicePortsTable, ports)
 }
 
 func InsertHPAs(con driver.Conn, db *sql.DB, items hpa.InfoList) error {

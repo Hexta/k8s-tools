@@ -9,7 +9,7 @@ import (
 	"github.com/Hexta/k8s-tools/internal/k8s/container"
 	"github.com/Hexta/k8s-tools/internal/k8s/deployment"
 	"github.com/Hexta/k8s-tools/internal/k8s/ds"
-	"github.com/Hexta/k8s-tools/internal/k8s/endpoints"
+	"github.com/Hexta/k8s-tools/internal/k8s/endpointslices"
 	"github.com/Hexta/k8s-tools/internal/k8s/fetch"
 	"github.com/Hexta/k8s-tools/internal/k8s/hpa"
 	k8snode "github.com/Hexta/k8s-tools/internal/k8s/node"
@@ -23,21 +23,21 @@ import (
 )
 
 type Info struct {
-	Containers  container.InfoList
-	DSs         ds.InfoList
-	Deployments deployment.InfoList
-	Endpoints   endpoints.InfoList
-	HPAs        hpa.InfoList
-	Images      k8snode.ImageList
-	Nodes       k8snode.InfoList
-	Pods        k8spod.InfoList
-	PVs         pv.InfoList
-	Services    k8sservice.InfoList
-	STSs        sts.InfoList
-	Taints      TaintList
-	Tolerations TolerationList
-	ctx         context.Context
-	clientset   *kubernetes.Clientset
+	Containers     container.InfoList
+	DSs            ds.InfoList
+	Deployments    deployment.InfoList
+	EndpointSlices endpointslices.InfoList
+	HPAs           hpa.InfoList
+	Images         k8snode.ImageList
+	Nodes          k8snode.InfoList
+	Pods           k8spod.InfoList
+	PVs            pv.InfoList
+	Services       k8sservice.InfoList
+	STSs           sts.InfoList
+	Taints         TaintList
+	Tolerations    TolerationList
+	ctx            context.Context
+	clientset      *kubernetes.Clientset
 }
 
 type Taint struct {
@@ -87,7 +87,7 @@ func (r *Info) Fetch(opts fetch.Options) error {
 	r.startFetchFunc(r.fetchNodes, "Nodes", &wg, opts, errorCh)
 	r.startFetchFunc(r.fetchDeployments, "Deployments", &wg, opts, errorCh)
 	r.startFetchFunc(r.fetchHPAs, "HPAs", &wg, opts, errorCh)
-	r.startFetchFunc(r.fetchEndpoints, "Endpoints", &wg, opts, errorCh)
+	r.startFetchFunc(r.fetchEndpointSlices, "EndpointSlices", &wg, opts, errorCh)
 	r.startFetchFunc(r.fetchSTSs, "STSs", &wg, opts, errorCh)
 	r.startFetchFunc(r.fetchDSs, "DSs", &wg, opts, errorCh)
 	r.startFetchFunc(r.fetchServices, "Services", &wg, opts, errorCh)
@@ -150,9 +150,9 @@ func (r *Info) fetchDeployments(ctx context.Context, _ fetch.Options) error {
 	return err
 }
 
-func (r *Info) fetchEndpoints(ctx context.Context, _ fetch.Options) error {
+func (r *Info) fetchEndpointSlices(ctx context.Context, _ fetch.Options) error {
 	var err error
-	r.Endpoints, err = endpoints.Fetch(ctx, r.clientset)
+	r.EndpointSlices, err = endpointslices.Fetch(ctx, r.clientset)
 	return err
 }
 
