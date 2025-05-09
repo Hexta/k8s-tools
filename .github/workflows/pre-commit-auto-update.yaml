@@ -29,9 +29,10 @@ jobs:
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@271a8d0340265f705b14b6d32b9829c1cb33d45e # v7.0.8
         with:
-          token: ${{ secrets.BOT_GITHUB_TOKEN }}
-          branch: auto-update-pre-commit-hooks
-          title: Auto-update pre-commit hooks
-          commit-message: Auto-update pre-commit hooks
           body: Update pre-commit tools to the latest version
+          branch: auto-update-pre-commit-hooks
+          commit-message: Auto-update pre-commit hooks
           labels: dependencies
+          sign-commits: true
+          title: Auto-update pre-commit hooks
+          token: ${{ secrets.BOT_GITHUB_TOKEN }}
