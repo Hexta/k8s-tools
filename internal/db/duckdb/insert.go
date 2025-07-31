@@ -16,6 +16,7 @@ import (
 	k8snode "github.com/Hexta/k8s-tools/internal/k8s/node"
 	k8spod "github.com/Hexta/k8s-tools/internal/k8s/pod"
 	"github.com/Hexta/k8s-tools/internal/k8s/pv"
+	"github.com/Hexta/k8s-tools/internal/k8s/pvc"
 	"github.com/Hexta/k8s-tools/internal/k8s/service"
 	"github.com/Hexta/k8s-tools/internal/k8s/sts"
 	"github.com/marcboeker/go-duckdb"
@@ -34,6 +35,7 @@ const (
 	InitContainersTable     = "init_containers"
 	NodesTable              = "nodes"
 	PVTable                 = "persistent_volumes"
+	PVCTable                = "persistent_volume_claims"
 	PodsTable               = "pods"
 	STSTable                = "stateful_sets"
 	Schema                  = "k8s"
@@ -127,6 +129,10 @@ func InsertEndpointSlicePorts(con driver.Conn, db *sql.DB, items endpointslices.
 
 func InsertHPAs(con driver.Conn, db *sql.DB, items hpa.InfoList) error {
 	return doInsert[hpa.Info](con, db, Schema, HPATable, items)
+}
+
+func InsertPVCs(con driver.Conn, db *sql.DB, items pvc.InfoList) error {
+	return doInsert[pvc.Info](con, db, Schema, PVCTable, items)
 }
 
 func InsertPVs(con driver.Conn, db *sql.DB, items pv.InfoList) error {

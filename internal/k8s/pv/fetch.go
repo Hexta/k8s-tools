@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	v2 "k8s.io/api/core/v1"
+	"github.com/Hexta/k8s-tools/internal/k8sutil"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 )
@@ -28,8 +28,8 @@ func Fetch(ctx context.Context, clientset *kubernetes.Clientset) (InfoList, erro
 				CreationTimestamp: item.CreationTimestamp.Time,
 				Labels:            item.Labels,
 
-				AccessModes:                   convertAccessModesToStringSlice(item.Spec.AccessModes),
-				Capacity:                      convertResourceListToStringMap(item.Spec.Capacity),
+				AccessModes:                   k8sutil.ConvertPVAccessModesToStrings(item.Spec.AccessModes),
+				Capacity:                      k8sutil.ConvertResourceListToStringMap(item.Spec.Capacity),
 				ClaimRefKind:                  item.Spec.ClaimRef.Kind,
 				ClaimRefName:                  item.Spec.ClaimRef.Name,
 				ClaimRefNamespace:             item.Spec.ClaimRef.Namespace,
@@ -46,20 +46,4 @@ func Fetch(ctx context.Context, clientset *kubernetes.Clientset) (InfoList, erro
 	}
 
 	return infoList, nil
-}
-
-func convertResourceListToStringMap(list v2.ResourceList) map[string]int64 {
-	capacity := make(map[string]int64, len(list))
-	for k, v := range list {
-		capacity[string(k)] = v.Value()
-	}
-	return capacity
-}
-
-func convertAccessModesToStringSlice(modes []v2.PersistentVolumeAccessMode) []string {
-	modesSlice := make([]string, len(modes))
-	for i, mode := range modes {
-		modesSlice[i] = string(mode)
-	}
-	return modesSlice
 }
