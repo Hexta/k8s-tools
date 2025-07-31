@@ -126,6 +126,32 @@ CREATE TABLE IF NOT EXISTS k8s.nodes (
     os_image STRING
 );
 
+CREATE TABLE IF NOT EXISTS k8s.persistent_volume_claims (
+    name STRING,
+    namespace STRING,
+    labels MAP(STRING, STRING),
+    annotations MAP(STRING, STRING),
+    creation_ts TIMESTAMP,
+
+    access_modes STRING[],
+    allocated_resource_statuses MAP(STRING, STRING),
+    allocated_resources MAP(STRING, INT64),
+    capacity MAP(STRING, INT64),
+    current_volume_attributes_class_name STRING,
+    desired_access_modes STRING[],
+    modify_volume_status STRING,
+    phase STRING,
+    resource_limits MAP(STRING, INT64),
+    resource_requests MAP(STRING, INT64),
+    storage_class_name STRING,
+    target_volume_attributes_class_name STRING,
+    volume_attributes_class_name STRING,
+    volume_mode STRING,
+    volume_name STRING,
+    PRIMARY KEY (namespace, name)
+);
+CREATE VIEW IF NOT EXISTS k8s.pvcs AS SELECT * FROM k8s.persistent_volume_claims;
+
 CREATE TABLE IF NOT EXISTS k8s.persistent_volumes (
     name STRING,
     labels MAP(STRING, STRING),

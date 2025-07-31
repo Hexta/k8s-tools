@@ -24,6 +24,10 @@ test:
 lint:
 	@golangci-lint run -v ./...
 
+.PHONY: lint-fix
+lint-fix:
+	@golangci-lint run -v --fix ./...
+
 .PHONY: docs
 docs: build
 	@./dist/k8s-tools docs generate

@@ -9,6 +9,7 @@ k8s-tools provide a SQL interface for querying information about various Kuberne
 * EndpointSlices
 * HorizontalPodAutoscalers
 * Nodes
+* PersistentVolumeClaims
 * PersistentVolumes
 * Pods
 * Services
