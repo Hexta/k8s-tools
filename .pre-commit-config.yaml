@@ -24,7 +24,7 @@ repos:
           - pre-commit
 
   - repo: https://github.com/golangci/golangci-lint
-    rev: v2.3.0
+    rev: v2.4.0
     hooks:
       - id: golangci-lint
         entry: golangci-lint run --fix ./...
