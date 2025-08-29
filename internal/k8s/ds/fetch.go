@@ -15,7 +15,7 @@ func Fetch(ctx context.Context, clientset *kubernetes.Clientset) (InfoList, erro
 	err := k8sutil.Paginate(ctx, func(opts v1.ListOptions) (string, error) {
 		list, err := clientset.AppsV1().DaemonSets(v1.NamespaceAll).List(ctx, opts)
 		if err != nil {
-			return "", fmt.Errorf("failed to list deployments: %v", err)
+			return "", fmt.Errorf("failed to list daemon sets: %v", err)
 		}
 
 		for idx := range list.Items {
