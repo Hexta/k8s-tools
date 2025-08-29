@@ -1,20 +1,28 @@
+.DEFAULT_GOAL := build
+
 ENV := CGO_ENABLED=1
-LDFLAGS := "-w -s"
+LDFLAGS ?= -w -s
+
+DIST_DIR := dist
+BIN_NAME := k8s-tools
+CMD_PATH := ./cmd/k8s-tools
 
 BIN_NAME_SUFFIX :=
 
 ifdef GOOS
-		BIN_NAME_SUFFIX := $(BIN_NAME_SUFFIX)-$(GOOS)
+	BIN_NAME_SUFFIX := $(BIN_NAME_SUFFIX)-$(GOOS)
 endif
 
 ifdef GOARCH
-		BIN_NAME_SUFFIX := $(BIN_NAME_SUFFIX)-$(GOARCH)
+	BIN_NAME_SUFFIX := $(BIN_NAME_SUFFIX)-$(GOARCH)
 endif
+
+BINARY_PATH := $(DIST_DIR)/$(BIN_NAME)$(BIN_NAME_SUFFIX)
 
 .PHONY: build
 build:
 	mkdir -p dist
-	$(ENV) go build -ldflags=$(LDFLAGS) -o dist/k8s-tools$(BIN_NAME_SUFFIX) -v ./cmd/k8s-tools
+	$(ENV) go build -ldflags '$(LDFLAGS)' -o $(BINARY_PATH) -v $(CMD_PATH)
 
 .PHONY: test
 test:
@@ -30,4 +38,4 @@ lint-fix:
 
 .PHONY: docs
 docs: build
-	@./dist/k8s-tools docs generate
+	@$(BINARY_PATH) docs generate
