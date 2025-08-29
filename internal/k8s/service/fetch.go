@@ -4,24 +4,21 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/Hexta/k8s-tools/internal/k8sutil"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 )
 
 func Fetch(ctx context.Context, clientset *kubernetes.Clientset) (InfoList, error) {
-	var continueToken string
 	infoList := make(InfoList, 0, 10000)
 
-	for {
-		list, err := clientset.CoreV1().Services(v1.NamespaceAll).List(ctx, v1.ListOptions{
-			Continue: continueToken,
-		})
+	err := k8sutil.Paginate(ctx, func(opts v1.ListOptions) (string, error) {
+		l, err := clientset.CoreV1().Services(v1.NamespaceAll).List(ctx, opts)
 		if err != nil {
-			return nil, fmt.Errorf("failed to list services: %v", err)
+			return "", fmt.Errorf("failed to list services: %v", err)
 		}
-
-		for idx := range list.Items {
-			item := &list.Items[idx]
+		for idx := range l.Items {
+			item := &l.Items[idx]
 			infoList = append(infoList, &Info{
 				Annotations:       item.Annotations,
 				CreationTimestamp: item.CreationTimestamp.Time,
@@ -46,11 +43,8 @@ func Fetch(ctx context.Context, clientset *kubernetes.Clientset) (InfoList, erro
 				Type:                     item.Spec.Type,
 			})
 		}
+		return l.Continue, nil
+	})
 
-		if continueToken = list.Continue; continueToken == "" {
-			break
-		}
-	}
-
-	return infoList, nil
+	return infoList, err
 }

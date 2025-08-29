@@ -10,15 +10,12 @@ import (
 )
 
 func Fetch(ctx context.Context, clientset *kubernetes.Clientset) (InfoList, error) {
-	var continueToken string
 	infoList := make(InfoList, 0, 10000)
 
-	for {
-		list, err := clientset.CoreV1().PersistentVolumes().List(ctx, v1.ListOptions{
-			Continue: continueToken,
-		})
+	err := k8sutil.Paginate(ctx, func(opts v1.ListOptions) (string, error) {
+		list, err := clientset.CoreV1().PersistentVolumes().List(ctx, opts)
 		if err != nil {
-			return nil, fmt.Errorf("failed to list persistent volumes: %v", err)
+			return "", fmt.Errorf("failed to list persistent volumes: %v", err)
 		}
 
 		for idx := range list.Items {
@@ -39,11 +36,8 @@ func Fetch(ctx context.Context, clientset *kubernetes.Clientset) (InfoList, erro
 				VolumeMode:                    (*string)(item.Spec.VolumeMode),
 			})
 		}
+		return list.Continue, nil
+	})
 
-		if continueToken = list.Continue; continueToken == "" {
-			break
-		}
-	}
-
-	return infoList, nil
+	return infoList, err
 }

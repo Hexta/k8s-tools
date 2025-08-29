@@ -4,20 +4,18 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/Hexta/k8s-tools/internal/k8sutil"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 )
 
 func Fetch(ctx context.Context, clientset *kubernetes.Clientset) (InfoList, error) {
-	var continueToken string
 	infoList := make(InfoList, 0, 10000)
 
-	for {
-		list, err := clientset.AppsV1().StatefulSets(v1.NamespaceAll).List(ctx, v1.ListOptions{
-			Continue: continueToken,
-		})
+	err := k8sutil.Paginate(ctx, func(opts v1.ListOptions) (string, error) {
+		list, err := clientset.AppsV1().StatefulSets(v1.NamespaceAll).List(ctx, opts)
 		if err != nil {
-			return nil, fmt.Errorf("failed to list statefulsets: %v", err)
+			return "", fmt.Errorf("failed to list statefulsets: %v", err)
 		}
 
 		for idx := range list.Items {
@@ -31,10 +29,8 @@ func Fetch(ctx context.Context, clientset *kubernetes.Clientset) (InfoList, erro
 			})
 		}
 
-		if continueToken = list.Continue; continueToken == "" {
-			break
-		}
-	}
+		return list.Continue, nil
+	})
 
-	return infoList, nil
+	return infoList, err
 }

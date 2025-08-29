@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/Hexta/k8s-tools/internal/k8sutil"
 	v2 "k8s.io/api/discovery/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -11,15 +12,12 @@ import (
 
 // Fetch retrieves a list of endpoint information from all namespaces using the provided Kubernetes clientset.
 func Fetch(ctx context.Context, clientset *kubernetes.Clientset) (InfoList, error) {
-	var continueToken string
 	infoList := make(InfoList, 0, 10000)
 
-	for {
-		list, err := clientset.DiscoveryV1().EndpointSlices(v1.NamespaceAll).List(ctx, v1.ListOptions{
-			Continue: continueToken,
-		})
+	err := k8sutil.Paginate(ctx, func(opts v1.ListOptions) (string, error) {
+		list, err := clientset.DiscoveryV1().EndpointSlices(v1.NamespaceAll).List(ctx, opts)
 		if err != nil {
-			return nil, fmt.Errorf("failed to list endpoints: %w", err)
+			return "", fmt.Errorf("failed to list endpoints: %w", err)
 		}
 
 		for idx := range list.Items {
@@ -40,12 +38,10 @@ func Fetch(ctx context.Context, clientset *kubernetes.Clientset) (InfoList, erro
 			})
 		}
 
-		if continueToken = list.Continue; continueToken == "" {
-			break
-		}
-	}
+		return list.Continue, nil
+	})
 
-	return infoList, nil
+	return infoList, err
 }
 
 func getPorts(es *v2.EndpointSlice) PortList {

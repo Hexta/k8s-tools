@@ -69,7 +69,23 @@ func NewInfo(ctx context.Context, clientset *kubernetes.Clientset) *Info {
 	}
 }
 
-func (r *Info) Fetch(opts fetch.Options) error {
+func (i *Info) Fetch(opts fetch.Options) error {
+	tasks := []struct {
+		name string
+		fn   func(ctx context.Context, opts fetch.Options) error
+	}{
+		{"Pods", i.fetchPods},
+		{"Nodes", i.fetchNodes},
+		{"Deployments", i.fetchDeployments},
+		{"HPAs", i.fetchHPAs},
+		{"EndpointSlices", i.fetchEndpointSlices},
+		{"STSs", i.fetchSTSs},
+		{"DSs", i.fetchDSs},
+		{"Services", i.fetchServices},
+		{"PVs", i.fetchPVs},
+		{"PVCs", i.fetchPVCs},
+	}
+
 	wg := sync.WaitGroup{}
 	errorCh := make(chan error)
 
@@ -85,16 +101,9 @@ func (r *Info) Fetch(opts fetch.Options) error {
 	start := time.Now()
 	log.Debug("Fetching K8s info")
 
-	r.startFetchFunc(r.fetchPods, "Pods", &wg, opts, errorCh)
-	r.startFetchFunc(r.fetchNodes, "Nodes", &wg, opts, errorCh)
-	r.startFetchFunc(r.fetchDeployments, "Deployments", &wg, opts, errorCh)
-	r.startFetchFunc(r.fetchHPAs, "HPAs", &wg, opts, errorCh)
-	r.startFetchFunc(r.fetchEndpointSlices, "EndpointSlices", &wg, opts, errorCh)
-	r.startFetchFunc(r.fetchSTSs, "STSs", &wg, opts, errorCh)
-	r.startFetchFunc(r.fetchDSs, "DSs", &wg, opts, errorCh)
-	r.startFetchFunc(r.fetchServices, "Services", &wg, opts, errorCh)
-	r.startFetchFunc(r.fetchPVs, "PVs", &wg, opts, errorCh)
-	r.startFetchFunc(r.fetchPVCs, "PVCs", &wg, opts, errorCh)
+	for _, t := range tasks {
+		i.startFetchFunc(t.fn, t.name, &wg, opts, errorCh)
+	}
 
 	wg.Wait()
 	close(errorCh)
@@ -104,22 +113,22 @@ func (r *Info) Fetch(opts fetch.Options) error {
 	return errors.Join(errorList...)
 }
 
-func (r *Info) startFetchFunc(f func(ctx context.Context, opts fetch.Options) error, name string, wg *sync.WaitGroup, opts fetch.Options, errorCh chan error) {
-	wg.Add(1)
-	go func() {
+func (i *Info) startFetchFunc(f func(ctx context.Context, opts fetch.Options) error, name string, wg *sync.WaitGroup, opts fetch.Options, errorCh chan error) {
+	wg.Go(func() {
 		start := time.Now()
 		defer func() {
 			log.Debugf("Fetching %s: done, elapsed: %v", name, time.Since(start))
-			wg.Done()
 		}()
+
 		log.Debugf("Fetching %s", name)
 		b := newBackoff(opts)
-		err := retry.Do(r.ctx, b, func(ctx context.Context) error {
+
+		err := retry.Do(i.ctx, b, func(ctx context.Context) error {
 			err := f(ctx, opts)
 			return retry.RetryableError(err)
 		})
 		errorCh <- err
-	}()
+	})
 }
 
 func newBackoff(opts fetch.Options) retry.Backoff {
@@ -131,67 +140,67 @@ func newBackoff(opts fetch.Options) retry.Backoff {
 	return b
 }
 
-func (r *Info) fetchPods(ctx context.Context, _ fetch.Options) error {
+func (i *Info) fetchPods(ctx context.Context, _ fetch.Options) error {
 	var err error
-	r.Pods, err = k8spod.Fetch(ctx, r.clientset)
-	r.Tolerations = podsToTolerations(r.Pods)
+	i.Pods, err = k8spod.Fetch(ctx, i.clientset)
+	i.Tolerations = podsToTolerations(i.Pods)
 
 	return err
 }
 
-func (r *Info) fetchNodes(ctx context.Context, opts fetch.Options) error {
+func (i *Info) fetchNodes(ctx context.Context, opts fetch.Options) error {
 	var err error
-	r.Nodes, err = k8snode.Fetch(ctx, r.clientset, opts)
-	r.Taints = nodesToTaints(r.Nodes)
-	r.Images = nodesToImages(r.Nodes)
+	i.Nodes, err = k8snode.Fetch(ctx, i.clientset, opts)
+	i.Taints = nodesToTaints(i.Nodes)
+	i.Images = nodesToImages(i.Nodes)
 	return err
 }
 
-func (r *Info) fetchDeployments(ctx context.Context, _ fetch.Options) error {
+func (i *Info) fetchDeployments(ctx context.Context, _ fetch.Options) error {
 	var err error
-	r.Deployments, err = deployment.Fetch(ctx, r.clientset)
+	i.Deployments, err = deployment.Fetch(ctx, i.clientset)
 	return err
 }
 
-func (r *Info) fetchEndpointSlices(ctx context.Context, _ fetch.Options) error {
+func (i *Info) fetchEndpointSlices(ctx context.Context, _ fetch.Options) error {
 	var err error
-	r.EndpointSlices, err = endpointslices.Fetch(ctx, r.clientset)
+	i.EndpointSlices, err = endpointslices.Fetch(ctx, i.clientset)
 	return err
 }
 
-func (r *Info) fetchHPAs(ctx context.Context, _ fetch.Options) error {
+func (i *Info) fetchHPAs(ctx context.Context, _ fetch.Options) error {
 	var err error
-	r.HPAs, err = hpa.Fetch(ctx, r.clientset)
+	i.HPAs, err = hpa.Fetch(ctx, i.clientset)
 	return err
 }
 
-func (r *Info) fetchSTSs(ctx context.Context, _ fetch.Options) error {
+func (i *Info) fetchSTSs(ctx context.Context, _ fetch.Options) error {
 	var err error
-	r.STSs, err = sts.Fetch(ctx, r.clientset)
+	i.STSs, err = sts.Fetch(ctx, i.clientset)
 	return err
 }
 
-func (r *Info) fetchDSs(ctx context.Context, _ fetch.Options) error {
+func (i *Info) fetchDSs(ctx context.Context, _ fetch.Options) error {
 	var err error
-	r.DSs, err = ds.Fetch(ctx, r.clientset)
+	i.DSs, err = ds.Fetch(ctx, i.clientset)
 	return err
 }
 
-func (r *Info) fetchPVs(ctx context.Context, _ fetch.Options) error {
+func (i *Info) fetchPVs(ctx context.Context, _ fetch.Options) error {
 	var err error
-	r.PVs, err = pv.Fetch(ctx, r.clientset)
+	i.PVs, err = pv.Fetch(ctx, i.clientset)
 	return err
 }
 
-func (r *Info) fetchServices(ctx context.Context, _ fetch.Options) error {
+func (i *Info) fetchServices(ctx context.Context, _ fetch.Options) error {
 	var err error
-	r.Services, err = k8sservice.Fetch(ctx, r.clientset)
+	i.Services, err = k8sservice.Fetch(ctx, i.clientset)
 	return err
 }
 
-func (r *Info) fetchPVCs(ctx context.Context, _ fetch.Options) error {
+func (i *Info) fetchPVCs(ctx context.Context, _ fetch.Options) error {
 	var err error
-	r.PVCs, err = pvc.Fetch(ctx, r.clientset)
+	i.PVCs, err = pvc.Fetch(ctx, i.clientset)
 	return err
 }
 

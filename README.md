@@ -1,6 +1,6 @@
 # k8s-tools
 
-A toolset for inspecting Kubernetes clusters.
+A toolset for querying and inspecting Kubernetes clusters via a built-in SQL interface.
 
 k8s-tools provide a SQL interface for querying information about various Kubernetes resources, including:
 * Containers
@@ -37,8 +37,8 @@ For detailed schema information, see [DB Documentation](docs/db/index.md)
 
 ### Prerequisites
 
-- Go 1.23 or later
-- CGO enabled environment
+- Go 1.25 or later
+- CGO-enabled environment
 - Kubernetes cluster access configured
 
 ### Installation

@@ -38,16 +38,7 @@ var rootCmd = &cobra.Command{
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 		logutil.ConfigureLogger(globalOptions.Verbose)
 
-		cacheDir := getCacheDir()
-		if cacheDir == "" {
-			return fmt.Errorf("unable to determine cache directory")
-		}
-
-		if err := os.MkdirAll(cacheDir, 0o755); err != nil {
-			return fmt.Errorf("error creating cache directory: %w", err)
-		}
-
-		return nil
+		return ensureCacheDir()
 	},
 }
 
@@ -105,4 +96,16 @@ func getKubeconfig() string {
 	}
 
 	return defaultPath
+}
+
+// Ensure the cache directory exists and is writable.
+func ensureCacheDir() error {
+	cacheDir := getCacheDir()
+	if cacheDir == "" {
+		return fmt.Errorf("unable to determine cache directory")
+	}
+	if err := os.MkdirAll(cacheDir, 0o755); err != nil {
+		return fmt.Errorf("error creating cache directory: %w", err)
+	}
+	return nil
 }
