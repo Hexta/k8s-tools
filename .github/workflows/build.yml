@@ -10,6 +10,10 @@ on:
 
 jobs:
   build:
+    permissions:
+      contents: read
+      pull-requests: read
+      checks: write
     strategy:
       matrix:
         arch:
