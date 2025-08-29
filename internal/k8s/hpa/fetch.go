@@ -15,7 +15,7 @@ func Fetch(ctx context.Context, clientset *kubernetes.Clientset) (InfoList, erro
 	err := k8sutil.Paginate(ctx, func(opts v1.ListOptions) (string, error) {
 		list, err := clientset.AutoscalingV2().HorizontalPodAutoscalers(v1.NamespaceAll).List(ctx, opts)
 		if err != nil {
-			return "", fmt.Errorf("failed to list deployments: %v", err)
+			return "", fmt.Errorf("failed to list horizontal pod autoscalers: %v", err)
 		}
 
 		for idx := range list.Items {
