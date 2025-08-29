@@ -5,21 +5,19 @@ import (
 	"fmt"
 
 	"github.com/Hexta/k8s-tools/internal/k8s/container"
+	"github.com/Hexta/k8s-tools/internal/k8sutil"
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 )
 
 func Fetch(ctx context.Context, clientset *kubernetes.Clientset) (InfoList, error) {
-	var continueToken string
 	pods := make(InfoList, 0, 10000)
 
-	for {
-		list, err := clientset.CoreV1().Pods(v1.NamespaceAll).List(ctx, v1.ListOptions{
-			Continue: continueToken,
-		})
+	err := k8sutil.Paginate(ctx, func(opts v1.ListOptions) (string, error) {
+		list, err := clientset.CoreV1().Pods(v1.NamespaceAll).List(ctx, opts)
 		if err != nil {
-			return nil, fmt.Errorf("failed to list pods: %w", err)
+			return "", fmt.Errorf("failed to list pods: %w", err)
 		}
 
 		for idx := range list.Items {
@@ -90,12 +88,10 @@ func Fetch(ctx context.Context, clientset *kubernetes.Clientset) (InfoList, erro
 			})
 		}
 
-		if continueToken = list.GetContinue(); continueToken == "" {
-			break
-		}
-	}
+		return list.Continue, nil
+	})
 
-	return pods, nil
+	return pods, err
 }
 
 func getTolerations(tolerations []corev1.Toleration) TolerationList {

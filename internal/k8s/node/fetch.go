@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/Hexta/k8s-tools/internal/k8s/fetch"
+	"github.com/Hexta/k8s-tools/internal/k8sutil"
 	log "github.com/sirupsen/logrus"
 	apicorev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -15,7 +16,6 @@ import (
 const instanceTypeLabel = "node.kubernetes.io/instance-type"
 
 func Fetch(ctx context.Context, clientset *kubernetes.Clientset, opts fetch.Options) (InfoList, error) {
-	var continueToken string
 	nodes := make(InfoList, 0, 10000)
 
 	podsPerNode, err := listPodsPerNode(ctx, clientset)
@@ -23,13 +23,12 @@ func Fetch(ctx context.Context, clientset *kubernetes.Clientset, opts fetch.Opti
 		return nil, fmt.Errorf("failed to list pods per node: %w", err)
 	}
 
-	for {
-		list, err := clientset.CoreV1().Nodes().List(ctx, v1.ListOptions{
-			Continue:      continueToken,
-			LabelSelector: opts.LabelSelector,
-		})
+	err = k8sutil.Paginate(ctx, func(lo v1.ListOptions) (string, error) {
+		// Preserve label selector while paginating
+		lo.LabelSelector = opts.LabelSelector
+		list, err := clientset.CoreV1().Nodes().List(ctx, lo)
 		if err != nil {
-			return nil, fmt.Errorf("failed to list nodes: %w", err)
+			return "", fmt.Errorf("failed to list nodes: %w", err)
 		}
 
 		for idx := range list.Items {
@@ -66,12 +65,10 @@ func Fetch(ctx context.Context, clientset *kubernetes.Clientset, opts fetch.Opti
 			})
 		}
 
-		if continueToken = list.GetContinue(); continueToken == "" {
-			break
-		}
-	}
+		return list.Continue, nil
+	})
 
-	return nodes, nil
+	return nodes, err
 }
 
 func getTaints(taints []apicorev1.Taint) TaintList {
