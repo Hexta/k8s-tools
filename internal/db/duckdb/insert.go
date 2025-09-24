@@ -42,6 +42,7 @@ const (
 	ServiceTable            = "services"
 	TaintsTable             = "taints"
 	TolerationsTable        = "tolerations"
+	PVCVolumesTable         = "persistent_volume_claim_volumes"
 )
 
 const (
@@ -149,6 +150,10 @@ func InsertDSs(con driver.Conn, db *sql.DB, items ds.InfoList) error {
 
 func InsertServices(con driver.Conn, db *sql.DB, items service.InfoList) error {
 	return doInsert[service.Info](con, db, Schema, ServiceTable, items)
+}
+
+func InsertPVCVolumes(con driver.Conn, db *sql.DB, items k8s.PVCVolumeList) error {
+	return doInsert[k8s.PVCVolume](con, db, Schema, PVCVolumesTable, items)
 }
 
 func doInsert[T any](con driver.Conn, db *sql.DB, schema string, table string, items []*T) error {

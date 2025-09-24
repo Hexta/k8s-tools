@@ -38,6 +38,7 @@ type Info struct {
 	STSs           sts.InfoList
 	Taints         TaintList
 	Tolerations    TolerationList
+	PVCVolumes     PVCVolumeList
 	ctx            context.Context
 	clientset      *kubernetes.Clientset
 }
@@ -61,6 +62,16 @@ type Toleration struct {
 }
 
 type TolerationList []*Toleration
+
+type PVCVolume struct {
+	ClaimName string `db:"claim_name"`
+	Name      string `db:"name"`
+	Namespace string `db:"namespace"`
+	Pod       string `db:"pod_name"`
+	ReadOnly  bool   `db:"read_only"`
+}
+
+type PVCVolumeList []*PVCVolume
 
 func NewInfo(ctx context.Context, clientset *kubernetes.Clientset) *Info {
 	return &Info{
@@ -144,8 +155,29 @@ func (i *Info) fetchPods(ctx context.Context, _ fetch.Options) error {
 	var err error
 	i.Pods, err = k8spod.Fetch(ctx, i.clientset)
 	i.Tolerations = podsToTolerations(i.Pods)
+	i.PVCVolumes = podsToPVCVolumes(i.Pods)
 
 	return err
+}
+
+func podsToPVCVolumes(pods k8spod.InfoList) PVCVolumeList {
+	pvcVolumes := make(PVCVolumeList, 0, len(pods))
+	for _, pod := range pods {
+		for _, volume := range pod.Volumes {
+			pvcSource := volume.VolumeSource.PVC
+			if pvcSource != nil {
+				pvcVolumes = append(pvcVolumes, &PVCVolume{
+					ClaimName: pvcSource.ClaimName,
+					Name:      volume.Name,
+					Namespace: pod.Namespace,
+					Pod:       pod.Name,
+					ReadOnly:  pvcSource.ReadOnly,
+				})
+			}
+		}
+	}
+
+	return pvcVolumes
 }
 
 func (i *Info) fetchNodes(ctx context.Context, opts fetch.Options) error {

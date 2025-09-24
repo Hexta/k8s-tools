@@ -93,6 +93,9 @@ func InitDB(ctx context.Context, dataDir string, k8sInfo *k8s.Info) error {
 			return InsertPVCs(con, db, k8sInfo.PVCs)
 		},
 		func() error {
+			return InsertPVCVolumes(con, db, k8sInfo.PVCVolumes)
+		},
+		func() error {
 			return InsertServices(con, db, k8sInfo.Services)
 		},
 		func() error {

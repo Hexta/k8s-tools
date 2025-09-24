@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/Hexta/k8s-tools/internal/k8s/container"
+	"github.com/Hexta/k8s-tools/internal/k8s/volumesource"
 	"github.com/Hexta/k8s-tools/internal/k8sutil"
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -85,6 +86,7 @@ func Fetch(ctx context.Context, clientset *kubernetes.Clientset) (InfoList, erro
 				Subdomain:                     pod.Spec.Subdomain,
 				TerminationGracePeriodSeconds: pod.Spec.TerminationGracePeriodSeconds,
 				Tolerations:                   getTolerations(pod.Spec.Tolerations),
+				Volumes:                       getVolumes(pod.Spec.Volumes),
 			})
 		}
 
@@ -130,4 +132,25 @@ func getContainers(podContainers []corev1.Container, pod *corev1.Pod) container.
 		})
 	}
 	return containers
+}
+
+func getVolumes(volumes []corev1.Volume) VolumeList {
+	volumesList := make(VolumeList, 0, len(volumes))
+	for idx := range volumes {
+		volSrc := volumesource.VolumeSource{}
+		pvcClaim := volumes[idx].PersistentVolumeClaim
+
+		if pvcClaim != nil {
+			volSrc.PVC = &volumesource.PVC{
+				ClaimName: pvcClaim.ClaimName,
+				ReadOnly:  pvcClaim.ReadOnly,
+			}
+		}
+
+		volumesList = append(volumesList, &Volume{
+			Name:         volumes[idx].Name,
+			VolumeSource: volSrc,
+		})
+	}
+	return volumesList
 }
