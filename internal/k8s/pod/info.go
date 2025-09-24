@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/Hexta/k8s-tools/internal/k8s/container"
+	"github.com/Hexta/k8s-tools/internal/k8s/volumesource"
 	apicorev1 "k8s.io/api/core/v1"
 )
 
@@ -45,6 +46,7 @@ type Info struct {
 	ShareProcessNamespace         *bool   `db:"share_process_namespace"`
 	Subdomain                     string  `db:"subdomain"`
 	TerminationGracePeriodSeconds *int64  `db:"termination_grace_period_seconds"`
+	Volumes                       VolumeList
 }
 
 type InfoList []*Info
@@ -58,3 +60,10 @@ type Toleration struct {
 }
 
 type TolerationList []*Toleration
+
+type Volume struct {
+	Name         string
+	VolumeSource volumesource.VolumeSource
+}
+
+type VolumeList []*Volume

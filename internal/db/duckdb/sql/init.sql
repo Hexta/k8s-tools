@@ -171,6 +171,18 @@ CREATE TABLE IF NOT EXISTS k8s.persistent_volumes (
 );
 CREATE VIEW IF NOT EXISTS k8s.pvs AS SELECT * FROM k8s.persistent_volumes;
 
+CREATE TABLE IF NOT EXISTS k8s.persistent_volume_claim_volumes (
+    name STRING,
+    pod_name STRING,
+    namespace STRING,
+
+    claim_name STRING,
+    read_only BOOLEAN,
+
+    PRIMARY KEY (namespace, pod_name, claim_name, name)
+);
+CREATE VIEW IF NOT EXISTS k8s.pvc_volumes AS SELECT * FROM k8s.persistent_volume_claim_volumes;
+
 CREATE TABLE IF NOT EXISTS k8s.pods (
     name STRING,
     namespace STRING,
