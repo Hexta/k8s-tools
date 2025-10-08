@@ -110,7 +110,9 @@ CREATE TABLE IF NOT EXISTS k8s.nodes (
 
     address MAP(STRING, STRING),
     allocatable_cpu FLOAT,
+    allocatable_ephemeral_storage BIGINT,
     allocatable_memory FLOAT,
+    allocatable_pods INTEGER,
     annotations MAP(STRING, STRING),
     architecture STRING,
     capacity_cpu FLOAT,
