@@ -16,9 +16,11 @@ CREATE TABLE IF NOT EXISTS k8s.deployments (
     namespace STRING,
     creation_ts TIMESTAMP,
     labels MAP(STRING, STRING),
+    node_selector MAP(STRING, STRING),
     replicas INTEGER,
     PRIMARY KEY (namespace, name)
 );
+CREATE VIEW IF NOT EXISTS k8s.deploy AS SELECT * FROM k8s.deployments;
 
 CREATE TABLE IF NOT EXISTS k8s.daemonsets (
     name STRING,
