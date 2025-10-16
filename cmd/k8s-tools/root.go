@@ -18,6 +18,7 @@ import (
 var (
 	globalOptions = struct {
 		CacheDir                string
+		Context                 string
 		Format                  format.Format
 		FormatOptions           format.Options
 		Kubeconfig              string
@@ -43,6 +44,7 @@ var rootCmd = &cobra.Command{
 }
 
 func init() {
+	rootCmd.PersistentFlags().StringVar(&globalOptions.Context, "context", "", "context")
 	rootCmd.PersistentFlags().BoolVarP(&globalOptions.Verbose, "verbose", "v", false, "verbose")
 	rootCmd.PersistentFlags().StringVar(&globalOptions.CacheDir, "cache-dir", "", "cache directory")
 	rootCmd.PersistentFlags().StringVar(&globalOptions.Kubeconfig, "kubeconfig", "", "kubeconfig file")

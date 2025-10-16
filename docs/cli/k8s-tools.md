@@ -6,6 +6,7 @@ K8s toolbox
 
 ```
       --cache-dir string                      cache directory
+      --context string                        context
   -h, --help                                  help for k8s-tools
       --k8s-retry-initial-interval duration   Initial interval for Kubernetes API retry (default 1s)
       --k8s-retry-jitter-percent uint         Jitter percent for Kubernetes API retry (default 50)

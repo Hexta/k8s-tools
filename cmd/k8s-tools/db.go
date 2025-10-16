@@ -24,10 +24,14 @@ func newInitDBCmd() *cobra.Command {
 		Short: "Init DB",
 		Run: func(cmd *cobra.Command, args []string) {
 			ctx := cmd.Context()
-			clientSet := k8s.GetClientSet(getKubeconfig())
+
+			clientSet, err := k8s.GetClientSet(getKubeconfig(), globalOptions.Context)
+			if err != nil {
+				log.Fatalf("Failed to create clientset: %v", err)
+			}
 
 			k8sInfo := k8s.NewInfo(ctx, clientSet)
-			err := k8sInfo.Fetch(fetch.Options{
+			err = k8sInfo.Fetch(fetch.Options{
 				RetryInitialInterval: globalOptions.K8sRetryInitialInterval,
 				RetryJitterPercent:   globalOptions.K8sRetryJitterPercent,
 				RetryMaxAttempts:     globalOptions.K8sRetryMaxAttempts,

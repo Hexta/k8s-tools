@@ -12,6 +12,7 @@ Documentation for k8s-tools
 
 ```
       --cache-dir string                      cache directory
+      --context string                        context
       --k8s-retry-initial-interval duration   Initial interval for Kubernetes API retry (default 1s)
       --k8s-retry-jitter-percent uint         Jitter percent for Kubernetes API retry (default 50)
       --k8s-retry-max-attempts uint           Maximum number of attempts for Kubernetes API retry (default 5)
