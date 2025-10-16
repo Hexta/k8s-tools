@@ -25,6 +25,7 @@ func Fetch(ctx context.Context, clientset *kubernetes.Clientset) (InfoList, erro
 				Namespace:         item.Namespace,
 				CreationTimestamp: item.CreationTimestamp.Time,
 				Labels:            item.Labels,
+				NodeSelector:      item.Spec.Template.Spec.NodeSelector,
 				Replicas:          item.Spec.Replicas,
 			})
 		}
