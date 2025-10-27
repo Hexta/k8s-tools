@@ -10,6 +10,7 @@ import (
 	"github.com/Hexta/k8s-tools/internal/k8s/deployment"
 	"github.com/Hexta/k8s-tools/internal/k8s/ds"
 	"github.com/Hexta/k8s-tools/internal/k8s/endpointslices"
+	"github.com/Hexta/k8s-tools/internal/k8s/event"
 	"github.com/Hexta/k8s-tools/internal/k8s/fetch"
 	"github.com/Hexta/k8s-tools/internal/k8s/hpa"
 	k8snode "github.com/Hexta/k8s-tools/internal/k8s/node"
@@ -28,6 +29,7 @@ type Info struct {
 	DSs            ds.InfoList
 	Deployments    deployment.InfoList
 	EndpointSlices endpointslices.InfoList
+	Events         event.InfoList
 	HPAs           hpa.InfoList
 	Images         k8snode.ImageList
 	Nodes          k8snode.InfoList
@@ -90,6 +92,7 @@ func (i *Info) Fetch(opts fetch.Options) error {
 		{"Deployments", i.fetchDeployments},
 		{"HPAs", i.fetchHPAs},
 		{"EndpointSlices", i.fetchEndpointSlices},
+		{"Events", i.fetchEvents},
 		{"STSs", i.fetchSTSs},
 		{"DSs", i.fetchDSs},
 		{"Services", i.fetchServices},
@@ -197,6 +200,12 @@ func (i *Info) fetchDeployments(ctx context.Context, _ fetch.Options) error {
 func (i *Info) fetchEndpointSlices(ctx context.Context, _ fetch.Options) error {
 	var err error
 	i.EndpointSlices, err = endpointslices.Fetch(ctx, i.clientset)
+	return err
+}
+
+func (i *Info) fetchEvents(ctx context.Context, _ fetch.Options) error {
+	var err error
+	i.Events, err = event.Fetch(ctx, i.clientset)
 	return err
 }
 

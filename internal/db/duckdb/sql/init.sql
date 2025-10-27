@@ -78,6 +78,54 @@ CREATE TABLE IF NOT EXISTS k8s.endpoint_slice_ports (
     PRIMARY KEY (namespace, endpoint_slice_name, name)
 );
 
+CREATE TABLE IF NOT EXISTS k8s.events (
+    name STRING,
+    namespace STRING,
+    labels MAP(STRING, STRING),
+    annotations MAP(STRING, STRING),
+    creation_ts TIMESTAMP,
+
+    action STRING,
+    api_version STRING,
+    count INTEGER,
+    event_time TIMESTAMP,
+    first_timestamp TIMESTAMP,
+
+    involved_object_api_version STRING,
+    involved_object_field_path STRING,
+    involved_object_kind STRING,
+    involved_object_name STRING,
+    involved_object_namespace STRING,
+    involved_object_resource_version STRING,
+    involved_object_uid STRING,
+
+    kind STRING,
+    last_timestamp TIMESTAMP,
+    message STRING,
+    reason STRING,
+
+    related_object_api_version STRING,
+    related_object_field_path STRING,
+    related_object_kind STRING,
+    related_object_name STRING,
+    related_object_namespace STRING,
+    related_object_resource_version STRING,
+    related_object_uid STRING,
+
+    reporting_component STRING,
+    reporting_instance STRING,
+
+    series_count INTEGER,
+    series_last_observed_time TIMESTAMP,
+
+    source_component STRING,
+    source_host STRING,
+
+    type STRING,
+
+    PRIMARY KEY (namespace, name)
+);
+
 CREATE TABLE IF NOT EXISTS k8s.horizontal_pod_autoscalers (
     name STRING,
     namespace STRING,
@@ -243,6 +291,7 @@ CREATE TABLE IF NOT EXISTS k8s.services (
     type STRING,
     PRIMARY KEY (namespace, name)
 );
+CREATE VIEW IF NOT EXISTS k8s.svc AS SELECT * FROM k8s.services;
 
 CREATE TABLE IF NOT EXISTS k8s.stateful_sets (
     name STRING,

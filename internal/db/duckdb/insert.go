@@ -12,6 +12,7 @@ import (
 	"github.com/Hexta/k8s-tools/internal/k8s/deployment"
 	"github.com/Hexta/k8s-tools/internal/k8s/ds"
 	"github.com/Hexta/k8s-tools/internal/k8s/endpointslices"
+	"github.com/Hexta/k8s-tools/internal/k8s/event"
 	"github.com/Hexta/k8s-tools/internal/k8s/hpa"
 	k8snode "github.com/Hexta/k8s-tools/internal/k8s/node"
 	k8spod "github.com/Hexta/k8s-tools/internal/k8s/pod"
@@ -30,6 +31,7 @@ const (
 	EndpointsTable          = "endpoints"
 	EndpointSlicesTable     = "endpoint_slices"
 	EndpointSlicePortsTable = "endpoint_slice_ports"
+	EventsTable             = "events"
 	HPATable                = "horizontal_pod_autoscalers"
 	ImagesTable             = "images"
 	InitContainersTable     = "init_containers"
@@ -126,6 +128,10 @@ func InsertEndpointSlicePorts(con driver.Conn, db *sql.DB, items endpointslices.
 	}
 
 	return doInsert[endpointslices.Port](con, db, Schema, EndpointSlicePortsTable, ports)
+}
+
+func InsertEvents(con driver.Conn, db *sql.DB, items event.InfoList) error {
+	return doInsert[event.Info](con, db, Schema, EventsTable, items)
 }
 
 func InsertHPAs(con driver.Conn, db *sql.DB, items hpa.InfoList) error {
