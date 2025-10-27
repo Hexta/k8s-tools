@@ -72,6 +72,9 @@ func InitDB(ctx context.Context, dataDir string, k8sInfo *k8s.Info) error {
 			return InsertEndpointSlices(con, db, k8sInfo.EndpointSlices)
 		},
 		func() error {
+			return InsertEvents(con, db, k8sInfo.Events)
+		},
+		func() error {
 			return InsertHPAs(con, db, k8sInfo.HPAs)
 		},
 		func() error {
