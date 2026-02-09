@@ -57,6 +57,9 @@ func InitDB(ctx context.Context, dataDir string, k8sInfo *k8s.Info) error {
 			return InsertContainers(con, db, k8sInfo.Pods)
 		},
 		func() error {
+			return InsertCustomResources(con, db, k8sInfo.CustomResources)
+		},
+		func() error {
 			return InsertDeployments(con, db, k8sInfo.Deployments)
 		},
 		func() error {

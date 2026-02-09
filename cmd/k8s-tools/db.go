@@ -25,12 +25,27 @@ func newInitDBCmd() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			ctx := cmd.Context()
 
-			clientSet, err := k8s.GetClientSet(getKubeconfig(), globalOptions.Context)
+			restConfig, err := k8s.GetRestConfig(getKubeconfig(), globalOptions.Context)
+			if err != nil {
+				log.Fatalf("Failed to create rest config: %v", err)
+			}
+
+			clientSet, err := k8s.GetClientSet(restConfig)
 			if err != nil {
 				log.Fatalf("Failed to create clientset: %v", err)
 			}
 
-			k8sInfo := k8s.NewInfo(ctx, clientSet)
+			dynamicClient, err := k8s.GetDynamicClient(restConfig)
+			if err != nil {
+				log.Fatalf("Failed to create dynamic client: %v", err)
+			}
+
+			apiExtClient, err := k8s.GetAPIExtensionsClient(restConfig)
+			if err != nil {
+				log.Fatalf("Failed to create apiextensions client: %v", err)
+			}
+
+			k8sInfo := k8s.NewInfo(ctx, clientSet, dynamicClient, apiExtClient)
 			err = k8sInfo.Fetch(fetch.Options{
 				RetryInitialInterval: globalOptions.K8sRetryInitialInterval,
 				RetryJitterPercent:   globalOptions.K8sRetryJitterPercent,

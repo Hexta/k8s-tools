@@ -4,6 +4,7 @@ A toolset for querying and inspecting Kubernetes clusters via a built-in SQL int
 
 k8s-tools provide a SQL interface for querying information about various Kubernetes resources, including:
 * Containers
+* Custom Resources
 * DaemonSets
 * Deployments
 * EndpointSlices

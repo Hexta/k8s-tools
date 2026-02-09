@@ -4,11 +4,18 @@ import (
 	"fmt"
 
 	log "github.com/sirupsen/logrus"
+	apiextensionsclient "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
+	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 )
 
-func GetClientSet(kubeconfigFile string, kubeContext string) (*kubernetes.Clientset, error) {
+func GetClientSet(restConfig *rest.Config) (*kubernetes.Clientset, error) {
+	return kubernetes.NewForConfig(restConfig)
+}
+
+func GetRestConfig(kubeconfigFile string, kubeContext string) (*rest.Config, error) {
 	config, err := clientcmd.LoadFromFile(kubeconfigFile)
 	if err != nil {
 		log.Fatalf("Failed to load kubeconfig: %v", err)
@@ -22,15 +29,13 @@ func GetClientSet(kubeconfigFile string, kubeContext string) (*kubernetes.Client
 
 	clientConfig := clientcmd.NewNonInteractiveClientConfig(*config, kubeContext, &clientcmd.ConfigOverrides{}, nil)
 
-	restConfig, err := clientConfig.ClientConfig()
-	if err != nil {
-		return nil, fmt.Errorf("failed to get client config: %w", err)
-	}
+	return clientConfig.ClientConfig()
+}
 
-	clientSet, err := kubernetes.NewForConfig(restConfig)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create clientset: %w", err)
-	}
+func GetDynamicClient(restConfig *rest.Config) (*dynamic.DynamicClient, error) {
+	return dynamic.NewForConfig(restConfig)
+}
 
-	return clientSet, nil
+func GetAPIExtensionsClient(restConfig *rest.Config) (apiextensionsclient.Interface, error) {
+	return apiextensionsclient.NewForConfig(restConfig)
 }

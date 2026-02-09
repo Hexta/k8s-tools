@@ -9,6 +9,7 @@ import (
 
 	"github.com/Hexta/k8s-tools/internal/k8s"
 	"github.com/Hexta/k8s-tools/internal/k8s/container"
+	"github.com/Hexta/k8s-tools/internal/k8s/customresource"
 	"github.com/Hexta/k8s-tools/internal/k8s/deployment"
 	"github.com/Hexta/k8s-tools/internal/k8s/ds"
 	"github.com/Hexta/k8s-tools/internal/k8s/endpointslices"
@@ -26,6 +27,7 @@ import (
 // Table names
 const (
 	ContainersTable         = "containers"
+	CustomResourcesTable    = "custom_resources"
 	DSTable                 = "daemonsets"
 	DeploymentsTable        = "deployments"
 	EndpointsTable          = "endpoints"
@@ -85,6 +87,10 @@ func InsertContainers(con driver.Conn, db *sql.DB, items k8spod.InfoList) error 
 	}
 
 	return nil
+}
+
+func InsertCustomResources(con driver.Conn, db *sql.DB, items customresource.InfoList) error {
+	return doInsert[customresource.Info](con, db, Schema, CustomResourcesTable, items)
 }
 
 func InsertInitContainers(con driver.Conn, db *sql.DB, items k8spod.InfoList) error {
