@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"github.com/marcboeker/go-duckdb"
+	"github.com/duckdb/duckdb-go/v2"
 	log "github.com/sirupsen/logrus"
 )
 

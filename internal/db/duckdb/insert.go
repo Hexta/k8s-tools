@@ -21,7 +21,7 @@ import (
 	"github.com/Hexta/k8s-tools/internal/k8s/pvc"
 	"github.com/Hexta/k8s-tools/internal/k8s/service"
 	"github.com/Hexta/k8s-tools/internal/k8s/sts"
-	"github.com/marcboeker/go-duckdb"
+	"github.com/duckdb/duckdb-go/v2"
 )
 
 // Table names
