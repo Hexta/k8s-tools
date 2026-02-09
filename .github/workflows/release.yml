@@ -12,7 +12,7 @@ jobs:
       - name: Download dist
         uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
-          name: dist-linux-amd64
+          name: dist-linux-arm64
           path: dist
 
       - uses: softprops/action-gh-release@a06a81a03ee405af7f2048a818ed3f03bbf83c7b # v2.5.0
