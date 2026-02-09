@@ -22,12 +22,18 @@ var nodeUtilisationCmd = &cobra.Command{
 	Short: "Analyze the node utilisation",
 	Run: func(cmd *cobra.Command, args []string) {
 		ctx := cmd.Context()
-		clientSet, err := k8s.GetClientSet(getKubeconfig(), globalOptions.Context)
+
+		restConfig, err := k8s.GetRestConfig(getKubeconfig(), globalOptions.Context)
+		if err != nil {
+			log.Fatalf("Failed to create rest config: %v", err)
+		}
+
+		clientSet, err := k8s.GetClientSet(restConfig)
 		if err != nil {
 			log.Fatalf("Failed to create clientset: %v", err)
 		}
 
-		k8sInfo := k8s.NewInfo(ctx, clientSet)
+		k8sInfo := k8s.NewInfo(ctx, clientSet, nil, nil)
 		err = k8sInfo.Fetch(fetch.Options{
 			LabelSelector:        nodeCmdOpts.LabelSelector,
 			RetryInitialInterval: globalOptions.K8sRetryInitialInterval,

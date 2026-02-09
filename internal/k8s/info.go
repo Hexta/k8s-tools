@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/Hexta/k8s-tools/internal/k8s/container"
+	"github.com/Hexta/k8s-tools/internal/k8s/customresource"
 	"github.com/Hexta/k8s-tools/internal/k8s/deployment"
 	"github.com/Hexta/k8s-tools/internal/k8s/ds"
 	"github.com/Hexta/k8s-tools/internal/k8s/endpointslices"
@@ -21,28 +22,33 @@ import (
 	"github.com/Hexta/k8s-tools/internal/k8s/sts"
 	"github.com/sethvargo/go-retry"
 	log "github.com/sirupsen/logrus"
+	apiextensionsclient "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
+	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
 )
 
 type Info struct {
-	Containers     container.InfoList
-	DSs            ds.InfoList
-	Deployments    deployment.InfoList
-	EndpointSlices endpointslices.InfoList
-	Events         event.InfoList
-	HPAs           hpa.InfoList
-	Images         k8snode.ImageList
-	Nodes          k8snode.InfoList
-	Pods           k8spod.InfoList
-	PVCs           pvc.InfoList
-	PVs            pv.InfoList
-	Services       k8sservice.InfoList
-	STSs           sts.InfoList
-	Taints         TaintList
-	Tolerations    TolerationList
-	PVCVolumes     PVCVolumeList
-	ctx            context.Context
-	clientset      *kubernetes.Clientset
+	Containers      container.InfoList
+	CustomResources customresource.InfoList
+	DSs             ds.InfoList
+	Deployments     deployment.InfoList
+	EndpointSlices  endpointslices.InfoList
+	Events          event.InfoList
+	HPAs            hpa.InfoList
+	Images          k8snode.ImageList
+	Nodes           k8snode.InfoList
+	Pods            k8spod.InfoList
+	PVCs            pvc.InfoList
+	PVs             pv.InfoList
+	Services        k8sservice.InfoList
+	STSs            sts.InfoList
+	Taints          TaintList
+	Tolerations     TolerationList
+	PVCVolumes      PVCVolumeList
+	ctx             context.Context
+	clientset       *kubernetes.Clientset
+	dynamicClient   *dynamic.DynamicClient
+	apiExtClient    apiextensionsclient.Interface
 }
 
 type Taint struct {
@@ -75,10 +81,12 @@ type PVCVolume struct {
 
 type PVCVolumeList []*PVCVolume
 
-func NewInfo(ctx context.Context, clientset *kubernetes.Clientset) *Info {
+func NewInfo(ctx context.Context, clientset *kubernetes.Clientset, dynamicClient *dynamic.DynamicClient, apiExtClient apiextensionsclient.Interface) *Info {
 	return &Info{
-		ctx:       ctx,
-		clientset: clientset,
+		ctx:           ctx,
+		clientset:     clientset,
+		dynamicClient: dynamicClient,
+		apiExtClient:  apiExtClient,
 	}
 }
 
@@ -98,6 +106,7 @@ func (i *Info) Fetch(opts fetch.Options) error {
 		{"Services", i.fetchServices},
 		{"PVs", i.fetchPVs},
 		{"PVCs", i.fetchPVCs},
+		{"CustomResources", i.fetchCustomResources},
 	}
 
 	wg := sync.WaitGroup{}
@@ -242,6 +251,12 @@ func (i *Info) fetchServices(ctx context.Context, _ fetch.Options) error {
 func (i *Info) fetchPVCs(ctx context.Context, _ fetch.Options) error {
 	var err error
 	i.PVCs, err = pvc.Fetch(ctx, i.clientset)
+	return err
+}
+
+func (i *Info) fetchCustomResources(ctx context.Context, _ fetch.Options) error {
+	var err error
+	i.CustomResources, err = customresource.Fetch(ctx, i.dynamicClient, i.apiExtClient)
 	return err
 }
 

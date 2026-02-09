@@ -11,6 +11,19 @@ CREATE TABLE IF NOT EXISTS k8s.containers (
     PRIMARY KEY (namespace, pod_name, name)
 );
 
+CREATE TABLE IF NOT EXISTS k8s.custom_resources (
+    name STRING,
+    namespace STRING,
+    creation_ts TIMESTAMP,
+    labels MAP(STRING, STRING),
+    data JSON,
+    resource_group STRING,
+    resource_kind STRING,
+    resource_version STRING,
+    PRIMARY KEY (namespace, resource_group, resource_kind, resource_version, name)
+);
+CREATE VIEW IF NOT EXISTS k8s.cr AS SELECT * FROM k8s.custom_resources;
+
 CREATE TABLE IF NOT EXISTS k8s.deployments (
     name STRING,
     namespace STRING,
