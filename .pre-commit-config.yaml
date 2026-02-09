@@ -2,7 +2,7 @@
 # See https://pre-commit.com/hooks.html for more hooks
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v5.0.0
+    rev: v6.0.0
     hooks:
       - id: check-added-large-files
       - id: check-json
@@ -24,7 +24,7 @@ repos:
           - pre-commit
 
   - repo: https://github.com/golangci/golangci-lint
-    rev: v2.4.0
+    rev: v2.8.0
     hooks:
       - id: golangci-lint
         entry: golangci-lint run --fix ./...
@@ -35,7 +35,7 @@ repos:
           - pre-commit
 
   - repo: https://github.com/gitleaks/gitleaks
-    rev: v8.28.0
+    rev: v8.30.0
     hooks:
       - id: gitleaks
         stages:
