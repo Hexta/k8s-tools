@@ -11,7 +11,7 @@ import (
 )
 
 // Fetch retrieves a list of endpoint information from all namespaces using the provided Kubernetes clientset.
-func Fetch(ctx context.Context, clientset *kubernetes.Clientset) (InfoList, error) {
+func Fetch(ctx context.Context, clientset kubernetes.Interface) (InfoList, error) {
 	infoList := make(InfoList, 0, 10000)
 
 	err := k8sutil.Paginate(ctx, func(opts v1.ListOptions) (string, error) {

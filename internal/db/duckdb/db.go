@@ -5,16 +5,12 @@ import (
 	"database/sql"
 	"database/sql/driver"
 	"fmt"
-	"path/filepath"
 
 	"github.com/duckdb/duckdb-go/v2"
 	log "github.com/sirupsen/logrus"
 )
 
-func initConnector(dataDir string) (*duckdb.Connector, error) {
-	dbDir := filepath.Join(dataDir, duckdbDir)
-	dbFile := filepath.Join(dbDir, "duckdb.db")
-
+func initConnector(dbFile string) (*duckdb.Connector, error) {
 	return duckdb.NewConnector(dbFile, nil)
 }
 

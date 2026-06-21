@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"path/filepath"
 	"slices"
 
 	"github.com/Hexta/k8s-tools/internal/format"
@@ -11,7 +12,8 @@ import (
 )
 
 func Query(ctx context.Context, dataDir string, q string) (*format.Data, error) {
-	connector, err := initConnector(dataDir)
+	dbFile := filepath.Join(dataDir, dbFileName)
+	connector, err := initConnector(dbFile)
 
 	if err != nil {
 		return nil, err

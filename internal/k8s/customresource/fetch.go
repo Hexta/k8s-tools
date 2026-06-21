@@ -14,7 +14,7 @@ import (
 	"k8s.io/client-go/dynamic"
 )
 
-func Fetch(ctx context.Context, dynamicClient *dynamic.DynamicClient, apiExtClient apiextensionsclient.Interface) (InfoList, error) {
+func Fetch(ctx context.Context, dynamicClient dynamic.Interface, apiExtClient apiextensionsclient.Interface) (InfoList, error) {
 	crdList, err := apiExtClient.ApiextensionsV1().CustomResourceDefinitions().List(ctx, metav1.ListOptions{})
 	if err != nil {
 		return nil, fmt.Errorf("failed to list custom resource definitions: %w", err)

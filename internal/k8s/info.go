@@ -46,8 +46,8 @@ type Info struct {
 	Tolerations     TolerationList
 	PVCVolumes      PVCVolumeList
 	ctx             context.Context
-	clientset       *kubernetes.Clientset
-	dynamicClient   *dynamic.DynamicClient
+	clientset       kubernetes.Interface
+	dynamicClient   dynamic.Interface
 	apiExtClient    apiextensionsclient.Interface
 }
 
@@ -81,7 +81,7 @@ type PVCVolume struct {
 
 type PVCVolumeList []*PVCVolume
 
-func NewInfo(ctx context.Context, clientset *kubernetes.Clientset, dynamicClient *dynamic.DynamicClient, apiExtClient apiextensionsclient.Interface) *Info {
+func NewInfo(ctx context.Context, clientset kubernetes.Interface, dynamicClient dynamic.Interface, apiExtClient apiextensionsclient.Interface) *Info {
 	return &Info{
 		ctx:           ctx,
 		clientset:     clientset,
