@@ -9,7 +9,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-func Fetch(ctx context.Context, clientset *kubernetes.Clientset) (InfoList, error) {
+func Fetch(ctx context.Context, clientset kubernetes.Interface) (InfoList, error) {
 	deployments := make(InfoList, 0, 10000)
 
 	err := k8sutil.Paginate(ctx, func(opts v1.ListOptions) (string, error) {

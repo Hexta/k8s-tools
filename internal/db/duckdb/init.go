@@ -12,7 +12,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-const duckdbDir = "duckdb"
+const dbFileName = "duckdb.db"
 
 var (
 	//go:embed sql/init.sql
@@ -20,28 +20,40 @@ var (
 )
 
 func InitDB(ctx context.Context, dataDir string, k8sInfo *k8s.Info) error {
-	dbDir := filepath.Join(dataDir, duckdbDir)
-	err := resetDBDirectory(dbDir)
+	err := resetDBDirectory(dataDir)
 	if err != nil {
 		return err
 	}
 
-	connector, err := initConnector(dataDir)
+	dbFile := filepath.Join(dataDir, dbFileName)
+	connector, err := initConnector(dbFile)
 	if err != nil {
 		return fmt.Errorf("failed to initialize DB connector: %w", err)
 	}
+
+	defer func() {
+		if err := connector.Close(); err != nil {
+			log.Errorf("failed to close raw DB connection: %s", err)
+		}
+	}()
 
 	db, con, err := initConnection(ctx, connector)
 	if err != nil {
 		return err
 	}
 
-	defer func(db *sql.DB) {
+	defer func() {
+		if err := con.Close(); err != nil {
+			log.Errorf("failed to close raw DB connection: %s", err)
+		}
+	}()
+
+	defer func() {
 		err := db.Close()
 		if err != nil {
 			log.Errorf("failed to close DB connection: %s", err)
 		}
-	}(db)
+	}()
 
 	err = db.Ping()
 	if err != nil {

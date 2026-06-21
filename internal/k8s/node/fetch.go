@@ -15,7 +15,7 @@ import (
 
 const instanceTypeLabel = "node.kubernetes.io/instance-type"
 
-func Fetch(ctx context.Context, clientset *kubernetes.Clientset, opts fetch.Options) (InfoList, error) {
+func Fetch(ctx context.Context, clientset kubernetes.Interface, opts fetch.Options) (InfoList, error) {
 	nodes := make(InfoList, 0, 10000)
 
 	podsPerNode, err := listPodsPerNode(ctx, clientset)
@@ -111,7 +111,7 @@ func getAddressMap(addresses []apicorev1.NodeAddress) map[string]string {
 	return addrMap
 }
 
-func listPodsPerNode(ctx context.Context, clientset *kubernetes.Clientset) (map[string][]*apicorev1.Pod, error) {
+func listPodsPerNode(ctx context.Context, clientset kubernetes.Interface) (map[string][]*apicorev1.Pod, error) {
 	podsPerNode := make(map[string][]*apicorev1.Pod)
 
 	list, err := clientset.CoreV1().Pods("").List(ctx, v1.ListOptions{})
