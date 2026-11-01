@@ -8,7 +8,7 @@ require (
 	github.com/charmbracelet/bubbles v1.0.0
 	github.com/charmbracelet/bubbletea v1.3.10
 	github.com/charmbracelet/lipgloss v1.1.0
-	github.com/duckdb/duckdb-go/v2 v2.10505.0
+	github.com/duckdb/duckdb-go/v2 v2.20000.0
 	github.com/rodaine/table v1.3.1
 	github.com/sethvargo/go-retry v0.4.0
 	github.com/sirupsen/logrus v1.9.4
@@ -34,12 +34,7 @@ require (
 	github.com/cpuguy83/go-md2man/v2 v2.0.6 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/dlclark/regexp2/v2 v2.2.1 // indirect
-	github.com/duckdb/duckdb-go-bindings v0.10505.0 // indirect
-	github.com/duckdb/duckdb-go-bindings/lib/darwin-amd64 v0.10505.0 // indirect
-	github.com/duckdb/duckdb-go-bindings/lib/darwin-arm64 v0.10505.0 // indirect
-	github.com/duckdb/duckdb-go-bindings/lib/linux-amd64 v0.10505.0 // indirect
-	github.com/duckdb/duckdb-go-bindings/lib/linux-arm64 v0.10505.0 // indirect
-	github.com/duckdb/duckdb-go-bindings/lib/windows-amd64 v0.10505.0 // indirect
+	github.com/duckdb/duckdb-go-bindings v0.20000.0 // indirect
 	github.com/emicklei/go-restful/v3 v3.13.0 // indirect
 	github.com/erikgeiser/coninput v0.0.0-20211004153227-1c3628e74d0f // indirect
 	github.com/fxamacker/cbor/v2 v2.9.1 // indirect
@@ -85,6 +80,11 @@ require (
 	github.com/x448/float16 v0.8.4 // indirect
 	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e // indirect
 	github.com/zeebo/xxh3 v1.1.0 // indirect
+	go.duckdb.org/libduckdb/darwin-amd64 v0.20000.0 // indirect
+	go.duckdb.org/libduckdb/darwin-arm64 v0.20000.0 // indirect
+	go.duckdb.org/libduckdb/linux-amd64 v0.20000.0 // indirect
+	go.duckdb.org/libduckdb/linux-arm64 v0.20000.0 // indirect
+	go.duckdb.org/libduckdb/windows-amd64 v0.20000.0 // indirect
 	go.yaml.in/yaml/v2 v2.4.4 // indirect
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
 	golang.org/x/exp v0.0.0-20260410095643-746e56fc9e2f // indirect
